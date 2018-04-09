@@ -1,0 +1,36 @@
+{
+  "name": "xobotyi/phync",
+  "description": "rsync wrapper library for php",
+  "type": "library",
+  "keywords": [
+    "php",
+    "beanstalk",
+    "beanstalkd",
+    "queue",
+    "client"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/xobotyi/phync",
+  "support": {
+    "issues": "https://github.com/xobotyi/phync/issues"
+  },
+  "authors": [
+    {
+      "name": "Anton Zinovyev",
+      "email": "xog3@yandex.ru",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": ">=7.1"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^6.5.3",
+    "codacy/coverage": "^1.4.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "xobotyi\\phync\\": "src"
+    }
+  }
+}
