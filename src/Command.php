@@ -7,6 +7,7 @@
 
 namespace xobotyi\phync;
 
+
 class Command
 {
     private $exec;
