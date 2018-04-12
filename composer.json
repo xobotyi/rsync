@@ -1,5 +1,5 @@
 {
-  "name": "xobotyi/phync",
+  "name": "xobotyi/rsync",
   "description": "rsync wrapper library for php",
   "type": "library",
   "keywords": [
@@ -10,9 +10,9 @@
     "client"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/xobotyi/phync",
+  "homepage": "https://github.com/xobotyi/rsync",
   "support": {
-    "issues": "https://github.com/xobotyi/phync/issues"
+    "issues": "https://github.com/xobotyi/rsync/issues"
   },
   "authors": [
     {
@@ -30,7 +30,7 @@
   },
   "autoload": {
     "psr-4": {
-      "xobotyi\\phync\\": "src"
+      "xobotyi\\rsync\\": "src"
     }
   }
 }

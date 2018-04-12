@@ -5,7 +5,7 @@
 ### I'm seeing this behaviour on
 - OS: 
 - PHP:
-- phync:
+- rsync:
 
 ### Steps to reproduce, backtrace or example script
 

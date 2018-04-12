@@ -1,11 +1,11 @@
 <?php
 /**
  * @Author : a.zinovyev
- * @Package: phync
+ * @Package: rsync
  * @License: http://www.opensource.org/licenses/mit-license.php
  */
 
-namespace xobotyi\phync;
+namespace xobotyi\rsync;
 
 
 class Option
