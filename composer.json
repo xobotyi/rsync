@@ -4,10 +4,8 @@
   "type": "library",
   "keywords": [
     "php",
-    "beanstalk",
-    "beanstalkd",
-    "queue",
-    "client"
+    "rsync",
+    "resync-wrapper"
   ],
   "license": "MIT",
   "homepage": "https://github.com/xobotyi/rsync",
