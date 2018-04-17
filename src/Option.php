@@ -573,11 +573,11 @@ class Option
         return self::OPTIONS_LIST;
     }
 
-    public static function IsSupported(string $option) :bool {
-        return (bool)(self::OPTIONS_LIST[$option] ?? false);
-    }
-
     public static function HasArgument(string $option) :bool {
         return (bool)(self::OPTIONS_LIST[$option]['hasArgument'] ?? false);
+    }
+
+    public static function IsSupported(string $option) :bool {
+        return (bool)(self::OPTIONS_LIST[$option] ?? false);
     }
 }
