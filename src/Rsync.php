@@ -13,36 +13,50 @@ class Rsync
     public const OPTION_EXECUTABLE = 'executable';
     public const OPTION_RAW_OUTPUT = 'rawOutput';
 
-    private $config  = [];
+    private $config = [
+        self::OPTION_EXECUTABLE => 'rsync',
+        self::OPTION_RAW_OUTPUT => false,
+    ];
+    private $ssh    = null;
+
     private $options = [];
-    private $ssh     = [];
 
     /**
      * @var \xobotyi\rsync\Command;
      */
     private $command;
 
-    public function __construct(?array $options = null, ?array $ssh = null, ?array $config = null) {
-        $this->setConfig($config);
+    public function __construct(?array $options = null, ?array $sshConfig = null, ?array $config = null) {
+        $this->setConfig($config)
+             ->setSSHConfig($sshConfig);
     }
 
-    public function setOptions(?array $options = null) {
-
+    public function setOptions(?array $options = null) :self {
+        return $this;
     }
 
-    public function setSsh(?array $ssh = null) {
+    public function setSSHConfig(?array $sshConfig = null) :self {
+        if ($sshConfig === null) {
+            $this->ssh = null;
 
+            return $this;
+        }
+
+        $this->ssh = new SSH($sshConfig);
+
+        return $this;
     }
 
-    public function setConfig(?array $config = null) {
-        $config = array_merge([
-                                  self::OPTION_EXECUTABLE => 'rsync0',
-                                  self::OPTION_RAW_OUTPUT => false,
-                              ], $config ?: []);
+    public function getSSH() :?SSH {
+        return $this->ssh;
+    }
 
-        $this->command
-            ? $this->command->setExec($config[self::OPTION_EXECUTABLE])->setRawOutput($config[self::OPTION_RAW_OUTPUT])
-            : $this->command = new Command($config[self::OPTION_EXECUTABLE], $config[self::OPTION_RAW_OUTPUT]);
+    public function setConfig(?array $config = null) :self {
+        $config = array_merge($this->config, $config ?: []);
+
+//        $this->command
+//            ? $this->command->setExecutable($config[self::OPTION_EXECUTABLE])->setRawOutput($config[self::OPTION_RAW_OUTPUT])
+//            : $this->command = new Command($config[self::OPTION_EXECUTABLE], $config[self::OPTION_RAW_OUTPUT]);
 
         $this->config = $config;
 
