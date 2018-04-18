@@ -291,7 +291,18 @@ abstract class Command
      * @return bool
      */
     public static function isExecutable(string $exec) :bool {
-        return (bool)shell_exec((substr(strtolower(PHP_OS), 0, 3) == 'win' ? 'where' : 'which') . ' ' . $exec);
+        if (substr(strtolower(PHP_OS), 0, 3) == 'win') {
+            if (strpos($exec, '/') !== false || strpos($exec, '\\') !== false) {
+                $exec = dirname($exec);
+                $exec = ($exec ? $exec . ':' : '') . basename($exec);
+            }
+
+            exec('where' . ' /Q ' . escapeshellarg($exec), $output, $code);
+
+            return $code === 0;
+        }
+
+        return (bool)@shell_exec('which' . ' ' . escapeshellarg($exec));
     }
 
     /**

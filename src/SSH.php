@@ -220,18 +220,4 @@ class SSH extends Command
 
         return $this;
     }
-
-    /**
-     * @param array $options
-     *
-     * @return \xobotyi\rsync\SSH
-     * @throws Exception\Command
-     */
-    public function setOptions(array $options) :self {
-        foreach ($options as $option => $value) {
-            self::setOption($option, $value);
-        }
-
-        return $this;
-    }
 }
