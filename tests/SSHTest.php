@@ -10,17 +10,25 @@ use xobotyi\rsync\SSH;
 class SSHTest extends \PHPUnit\Framework\TestCase
 {
     public function testSSH() {
-        $ssh = new SSH([
-                           SSH::CONF_EXECUTABLE => 'C:\rsync\ssh.exe',
-                           SSH::CONF_OPTIONS    => [
-                               SSH::OPT_IDENTIFICATION_FILE => __DIR__ . '\..\tests\ident.txt',
-                               SSH::OPT_OPTION              => ['BatchMode=yes', 'StrictHostKeyChecking=no'],
-                               SSH::OPT_IPV4                => true,
-                           ],
-                       ]);
+        $ssh = new SSH();
 
-        $this->assertEquals('C:\rsync\ssh.exe -4 -i "E:\github.com\rsync\tests\ident.txt" -o "BatchMode=yes" -o "StrictHostKeyChecking=no"', (string)$ssh);
         $this->assertFalse($ssh->isRawOutput());
+        $this->assertEquals(' ', $ssh->getOptionValueAssigner());
+
+        $ssh->setParameters(['123', '321']);
+        $this->assertEquals(['123', '321'], $ssh->getParameters());
+        $ssh->clearParameters();
+        $this->assertEquals([], $ssh->getParameters());
+
+        $this->assertEquals([], $ssh->getOptions());
+        $this->assertEquals('ssh', (string)$ssh);
+
+        $ssh->setOptions([
+                             SSH::OPT_IDENTIFICATION_FILE => __DIR__ . '\..\tests\ident.txt',
+                             SSH::OPT_OPTION              => ['BatchMode=yes', 'StrictHostKeyChecking=no'],
+                             SSH::OPT_IPV4                => true,
+                         ]);
+        $this->assertEquals('ssh -4 -i "E:\github.com\rsync\tests\ident.txt" -o "BatchMode=yes" -o "StrictHostKeyChecking=no"', (string)$ssh);
     }
 
     public function testSSHException_noArgumentAllowed() {

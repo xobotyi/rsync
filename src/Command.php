@@ -151,7 +151,7 @@ abstract class Command
             throw new Exception\Command("Executable path must be a valuable string");
         }
 
-        if (!\is_executable($executable)) {
+        if (!self::isExecutable($executable)) {
             throw new Exception\Command("{$executable} is not executable");
         }
 
@@ -193,7 +193,7 @@ abstract class Command
      */
     public function setOptions(array $options) {
         foreach ($options as $option => $value) {
-            self::setOption($option, $value);
+            $this->setOption($option, $value);
         }
 
         return $this;
@@ -283,6 +283,15 @@ abstract class Command
         $this->parameters = $params;
 
         return $this;
+    }
+
+    /**
+     * @param string $exec
+     *
+     * @return bool
+     */
+    public static function isExecutable(string $exec) :bool {
+        return (bool)shell_exec((substr(strtolower(PHP_OS), 0, 3) == 'win' ? 'where' : 'which') . ' ' . $exec);
     }
 
     /**
