@@ -586,7 +586,7 @@ class Rsync extends Command
     ];
 
     private $config = [
-        self::CONF_EXECUTABLE => 'ssh',
+        self::CONF_EXECUTABLE => 'rsync',
         self::CONF_RAW_OUTPUT => false,
         self::CONF_SSH        => null,
         self::CONF_OPTIONS    => [],
@@ -595,11 +595,14 @@ class Rsync extends Command
     public function __construct(?array $config = null) {
         $this->config = array_merge($this->config, $config ?: []);
 
-        if ($this->config[self::CONF_OPTIONS]) {
-            $this->setOptions($this->config[self::CONF_OPTIONS]);
-        }
+        $this->setOptions($this->config[self::CONF_OPTIONS])
+             ->setSSH($this->config[self::CONF_SSH]);
 
-        parent::__construct($this->config[self::CONF_EXECUTABLE], $this->config[self::CONF_RAW_OUTPUT]);
+        parent::__construct($this->config[self::CONF_EXECUTABLE], $this->config[self::CONF_RAW_OUTPUT], '=');
+    }
+
+    public function getSSH() :?SSH {
+        return $this->config[self::CONF_SSH];
     }
 
     public function setOption(string $optName, $val = true) :self {
@@ -621,10 +624,27 @@ class Rsync extends Command
         return $this;
     }
 
-    public function setOptions(array $options) :self {
-        foreach ($options as $option => $value) {
-            self::setOption($option, $value);
+    public function setSSH($ssh) :self {
+        if ($ssh instanceof SSH) {
+            $this->config[self::CONF_SSH] = $ssh;
         }
+        else if (is_array($ssh)) {
+            $this->config[self::CONF_SSH] = new SSH($ssh);
+        }
+        else if ($ssh === null) {
+            $this->config[self::CONF_SSH] = null;
+        }
+        else {
+            throw new Exception\Command('ssh config has to be an instance of \xobotyi\rsync\SSH, array or null, got ' . gettype($ssh));
+        }
+
+        return $this;
+    }
+
+    public function sync(string $from, string $to) :self {
+        $this->setParameters([$from, $to])
+             ->execute()
+             ->clearParameters();
 
         return $this;
     }

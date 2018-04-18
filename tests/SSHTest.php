@@ -1,4 +1,9 @@
 <?php
+/**
+ * @Author : a.zinovyev
+ * @Package: rsync
+ * @License: http://www.opensource.org/licenses/mit-license.php
+ */
 
 namespace xobotyi\rsync;
 
@@ -20,11 +25,6 @@ function shell_exec($cmd) {
     return \shell_exec($cmd);
 }
 
-/**
- * @Author : a.zinovyev
- * @Package: rsync
- * @License: http://www.opensource.org/licenses/mit-license.php
- */
 class SSHTest extends TestCase
 {
     public function testSSH() {
