@@ -185,7 +185,7 @@ class SSH extends Command
      *
      * @param array|null $config
      *
-     * @throws \xobotyi\rsync\Exception\Command
+     * @throws Exception\Command
      */
     public function __construct(?array $config = null) {
         $this->config = array_merge($this->config, $config ?: []);
@@ -202,9 +202,20 @@ class SSH extends Command
      * @param bool   $val
      *
      * @return \xobotyi\rsync\SSH
-     * @throws \xobotyi\rsync\Exception\Command
+     * @throws Exception\Command
      */
     public function setOption(string $optName, $val = true) :self {
+        switch ($optName) {
+            case self::OPT_CONFIG_FILE:
+            case self::OPT_PASSWORD_FILE:
+            case self::OPT_IDENTIFICATION_FILE:
+                if (!is_readable($val)) {
+                    throw new Exception\Command("File {$val} for option {$optName} is not readable");
+                }
+                $val = realpath($val);
+                break;
+        }
+
         parent::setOption($optName, $val);
 
         return $this;
@@ -214,7 +225,7 @@ class SSH extends Command
      * @param array $options
      *
      * @return \xobotyi\rsync\SSH
-     * @throws \xobotyi\rsync\Exception\Command
+     * @throws Exception\Command
      */
     public function setOptions(array $options) :self {
         foreach ($options as $option => $value) {

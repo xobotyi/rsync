@@ -234,11 +234,11 @@ abstract class Command
             $parametrizedOptions .= (strlen($option) > 1 ? ' --' : ' -') . $option . $this->optionValueAssigner . escapeshellarg($value);
         }
 
-        $shortOptions        = trim($shortOptions);
+        $shortOptions        = rtrim($shortOptions);
         $longOptions         = rtrim($longOptions);
         $parametrizedOptions = rtrim($parametrizedOptions);
 
-        $res .= ($shortOptions ? '-' . $shortOptions : '');
+        $res .= ($shortOptions ? ' -' . $shortOptions : '');
         $res .= $longOptions ?: '';
         $res .= $parametrizedOptions ?: '';
 
@@ -277,7 +277,7 @@ abstract class Command
                 throw new Exception\Command("Got non-stringable parameter");
             }
 
-            $param[] = (string)$value;
+            $params[] = (string)$value;
         }
 
         $this->parameters = $params;
@@ -309,7 +309,7 @@ abstract class Command
      * @return bool
      */
     private static function isStringable(&$var) :bool {
-        return (\is_string($var) || (\is_object($var) && \method_exists($var, '__toString')));
+        return (\is_string($var) || \is_numeric($var) || (\is_object($var) && \method_exists($var, '__toString')));
     }
 
     /**
@@ -350,6 +350,10 @@ abstract class Command
             }
 
             return $this;
+        }
+
+        if (!self::isStringable($val)) {
+            throw new Exception\Command("Option {$optName} got non-stringable value");
         }
 
         $this->options[$optName] = (string)$val;
