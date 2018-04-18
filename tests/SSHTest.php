@@ -1,13 +1,31 @@
 <?php
 
-use xobotyi\rsync\SSH;
+namespace xobotyi\rsync;
+
+use PHPUnit\Framework\TestCase;
+
+function php_uname($mode = 'a', $return = null) {
+    static $v;
+
+    $v = $return === null ? $v : $return ?: null;
+
+    return $v === null ? \php_uname($mode) : $v;
+}
+
+function shell_exec($cmd) {
+    if ($cmd === 'which "ssh"') {
+        return '/usr/bin/ssh';
+    }
+
+    return \shell_exec($cmd);
+}
 
 /**
  * @Author : a.zinovyev
  * @Package: rsync
  * @License: http://www.opensource.org/licenses/mit-license.php
  */
-class SSHTest extends \PHPUnit\Framework\TestCase
+class SSHTest extends TestCase
 {
     public function testSSH() {
         $ssh = new SSH();
@@ -17,6 +35,8 @@ class SSHTest extends \PHPUnit\Framework\TestCase
 
         $ssh->setParameters(['123', '321']);
         $this->assertEquals(['123', '321'], $ssh->getParameters());
+        $ssh->addParameter(1);
+        $this->assertEquals(['123', '321', 1], $ssh->getParameters());
         $ssh->clearParameters();
         $this->assertEquals([], $ssh->getParameters());
 
@@ -34,6 +54,10 @@ class SSHTest extends \PHPUnit\Framework\TestCase
         $this->assertNotEmpty((string)$ssh);
         $this->assertNull($ssh->getCode());
         $this->assertEquals('ssh', $ssh->getExecutable());
+
+        php_uname('a', 'Linux');
+        $ssh->setExecutable('ssh');
+        php_uname('a', 'Windows');
 
         unlink($identPath);
     }
@@ -91,6 +115,16 @@ class SSHTest extends \PHPUnit\Framework\TestCase
                         SSH::OPT_OPTION => ['BatchMode=yes', 'StrictHostKeyChecking=no', null],
                     ],
                 ]);
+    }
+
+    public function testSSHException_notStringable3() {
+        $this->expectException(\xobotyi\rsync\Exception\Command::class);
+        (new SSH())->addParameter(null);
+    }
+
+    public function testSSHException_notStringable4() {
+        $this->expectException(\xobotyi\rsync\Exception\Command::class);
+        (new SSH())->setParameters([null]);
     }
 
     public function testSSHException_notValuableExecutable() {
