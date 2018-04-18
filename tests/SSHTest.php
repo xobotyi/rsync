@@ -23,12 +23,17 @@ class SSHTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([], $ssh->getOptions());
         $this->assertEquals('ssh', (string)$ssh);
 
+        $identPath = __DIR__ . '\..\tests\ident.txt';
+        touch($identPath);
+
         $ssh->setOptions([
-                             SSH::OPT_IDENTIFICATION_FILE => __DIR__ . '\..\tests\ident.txt',
+                             SSH::OPT_IDENTIFICATION_FILE => $identPath,
                              SSH::OPT_OPTION              => ['BatchMode=yes', 'StrictHostKeyChecking=no'],
                              SSH::OPT_IPV4                => true,
                          ]);
-        $this->assertEquals('ssh -4 -i "E:\github.com\rsync\tests\ident.txt" -o "BatchMode=yes" -o "StrictHostKeyChecking=no"', (string)$ssh);
+        $this->assertEquals('ssh -4 -i "' . realpath($identPath) . '" -o "BatchMode=yes" -o "StrictHostKeyChecking=no"', (string)$ssh);
+
+        unlink($identPath);
     }
 
     public function testSSHException_noArgumentAllowed() {
