@@ -313,7 +313,7 @@ abstract class Command
      * @return bool
      */
     public static function isExecutable(string $exec) :bool {
-        if (substr(strtolower(php_uname()), 0, 3) === 'win') {
+        if (substr(strtolower(php_uname('s')), 0, 3) === 'win') {
             if (strpos($exec, '/') !== false || strpos($exec, '\\') !== false) {
                 $exec = dirname($exec);
                 $exec = ($exec ? $exec . ':' : '') . basename($exec);

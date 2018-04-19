@@ -46,6 +46,12 @@ class RsyncTest extends TestCase
         (new Rsync())->sync('./src/*', './dest');
     }
 
+    public function testException_unstringableParameter() {
+        $this->expectException(Exception\Command::class);
+
+        (new Rsync())->addParameter(null);
+    }
+
     public function testRsync() {
         proc_open(null, null, $null, null, null, null, 0);
         $rsync = new Rsync([
@@ -117,6 +123,14 @@ class RsyncTest extends TestCase
     }
 
     private function compareDirectories(string $dir1, string $dir2) :bool {
+        if (substr(strtolower(php_uname('s')), 0, 3) === 'win') {
+            shell_exec('dir ' . realpath($dir1) . ' /B > A.txt');
+            shell_exec('dir ' . realpath($dir2) . ' /B > B.txt');
+            shell_exec('fc A.txt B.txt > differences.txt');
+
+            return @file('differences.txt')[1] === "FC: no differences encountered" . PHP_EOL;
+        }
+
         return !shell_exec("diff --brief " . $dir1 . " " . $dir2 . " 2>&1");
     }
 
