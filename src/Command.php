@@ -22,11 +22,15 @@ abstract class Command
     /**
      * @var string
      */
-    private $executable;
+    private $cwd = './';
     /**
      * @var string
      */
-    private $cwd = './';
+    private $executable;
+    /**
+     * @var int|null
+     */
+    private $exitCode;
     /**
      * @var string
      */
@@ -36,21 +40,17 @@ abstract class Command
      */
     private $options = [];
     /**
-     * @var int|null
+     * @var array
      */
-    private $exitCode;
-    /**
-     * @var string
-     */
-    private $stdout;
+    private $parameters = [];
     /**
      * @var string
      */
     private $stderr;
     /**
-     * @var array
+     * @var string
      */
-    private $parameters = [];
+    private $stdout;
 
     /**
      * Command constructor.
@@ -137,6 +137,24 @@ abstract class Command
     /**
      * @return string
      */
+    public function getCWD() :string {
+        return $this->cwd;
+    }
+
+    /**
+     * @param string $cwd
+     *
+     * @return \xobotyi\rsync\Command
+     */
+    public function setCWD(string $cwd) :self {
+        $this->cwd = $cwd;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
     public function getExecutable() :string {
         return $this->executable;
     }
@@ -159,6 +177,13 @@ abstract class Command
         $this->executable = $executable;
 
         return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getExitCode() :?string {
+        return $this->exitCode;
     }
 
     /**
@@ -241,45 +266,6 @@ abstract class Command
     }
 
     /**
-     * @return string
-     */
-    public function getParametersString() :string {
-        if (empty($this->parameters)) {
-            return '';
-        }
-
-        $parametersStr = '';
-
-        foreach ($this->parameters as $value) {
-            $parametersStr .= ' ' . $value;
-        }
-
-        return $parametersStr;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getExitCode() :?string {
-        return $this->exitCode;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getStdout() :?string {
-        return $this->stdout;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getStderr() :?string {
-
-        return $this->stderr;
-    }
-
-    /**
      * @return array
      */
     public function getParameters() :array {
@@ -308,6 +294,38 @@ abstract class Command
     }
 
     /**
+     * @return string
+     */
+    public function getParametersString() :string {
+        if (empty($this->parameters)) {
+            return '';
+        }
+
+        $parametersStr = '';
+
+        foreach ($this->parameters as $value) {
+            $parametersStr .= ' ' . $value;
+        }
+
+        return $parametersStr;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getStderr() :?string {
+
+        return $this->stderr;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getStdout() :?string {
+        return $this->stdout;
+    }
+
+    /**
      * @param string $exec
      *
      * @return bool
@@ -325,24 +343,6 @@ abstract class Command
         }
 
         return (bool)shell_exec('which' . ' ' . escapeshellcmd($exec));
-    }
-
-    /**
-     * @param string $cwd
-     *
-     * @return \xobotyi\rsync\Command
-     */
-    public function setCWD(string $cwd) :self {
-        $this->cwd = $cwd;
-
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getCWD() :string {
-        return $this->cwd;
     }
 
     /**
