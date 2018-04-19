@@ -203,10 +203,8 @@ abstract class Command
      * @return string
      */
     public function getOptionsString() :string {
-        $res = '';
-
         if (!$this->options) {
-            return $res;
+            return '';
         }
 
         $shortOptions        = '';
@@ -238,11 +236,7 @@ abstract class Command
         $longOptions         = rtrim($longOptions);
         $parametrizedOptions = rtrim($parametrizedOptions);
 
-        $res .= ($shortOptions ? ' -' . $shortOptions : '');
-        $res .= $longOptions ?: '';
-        $res .= $parametrizedOptions ?: '';
-
-        return $res;
+        return ($shortOptions ? ' -' . $shortOptions : '') . ($longOptions ?: '') . ($parametrizedOptions ?: '');
     }
 
     /**

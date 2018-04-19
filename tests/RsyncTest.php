@@ -34,6 +34,7 @@ class RsyncTest extends TestCase
                             $rsync->getSSH()->getOptions());
 
         $this->assertEquals(null, $rsync->setSSH(null)->getSSH());
+        $this->assertEquals(' --xattrs', $rsync->getOptionsString());
 
         $ssh = new SSH([
                            SSH::CONF_OPTIONS => [
