@@ -465,9 +465,9 @@ class Rsync extends Command
     public const OPT_XATTRS = 'xattrs';
 
     public const CONF_EXECUTABLE = 'executable';
+    public const CONF_CWD        = 'cwd';
     public const CONF_SSH        = 'ssh';
     public const CONF_OPTIONS    = 'options';
-    public const CONF_RAW_OUTPUT = 'raw_output';
 
     protected $OPTIONS_LIST = [
         self::OPT_ACLS                => ['option' => 'A'],
@@ -587,7 +587,7 @@ class Rsync extends Command
 
     private $config = [
         self::CONF_EXECUTABLE => 'rsync',
-        self::CONF_RAW_OUTPUT => false,
+        self::CONF_CWD        => './',
         self::CONF_SSH        => null,
         self::CONF_OPTIONS    => [],
     ];
@@ -598,7 +598,7 @@ class Rsync extends Command
         $this->setOptions($this->config[self::CONF_OPTIONS])
              ->setSSH($this->config[self::CONF_SSH]);
 
-        parent::__construct($this->config[self::CONF_EXECUTABLE], $this->config[self::CONF_RAW_OUTPUT], '=');
+        parent::__construct($this->config[self::CONF_EXECUTABLE], $this->config[self::CONF_CWD], '=');
     }
 
     public function getSSH() :?SSH {
@@ -615,6 +615,7 @@ class Rsync extends Command
                 if (!is_readable($val)) {
                     throw new Exception\Command("File {$val} for option {$optName} is not readable");
                 }
+
                 $val = realpath($val);
                 break;
         }
@@ -642,8 +643,10 @@ class Rsync extends Command
     }
 
     public function sync(string $from, string $to) :self {
-        $this->setParameters([$from, $to])
-             ->execute()
+
+        $this->setParameters([$from, $to]);
+        var_dump((string)$this);
+        $this->execute()
              ->clearParameters();
 
         return $this;

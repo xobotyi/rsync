@@ -20,13 +20,13 @@ abstract class Command
      */
     protected $OPTIONS_LIST = [];
     /**
-     * @var int|null
-     */
-    private $code;
-    /**
      * @var string
      */
     private $executable;
+    /**
+     * @var string
+     */
+    private $cwd = './';
     /**
      * @var string
      */
@@ -36,30 +36,34 @@ abstract class Command
      */
     private $options = [];
     /**
-     * @var array
+     * @var int|null
      */
-    private $output;
+    private $exitCode;
+    /**
+     * @var string
+     */
+    private $stdout;
+    /**
+     * @var string
+     */
+    private $stderr;
     /**
      * @var array
      */
     private $parameters = [];
-    /**
-     * @var bool
-     */
-    private $rawOutput;
 
     /**
      * Command constructor.
      *
      * @param string $executable
-     * @param bool   $rawOutput
+     * @param string $cwd
      * @param string $optionValueAssigner
      *
      * @throws \xobotyi\rsync\Exception\Command
      */
-    public function __construct(string $executable, bool $rawOutput = false, string $optionValueAssigner = ' ') {
+    public function __construct(string $executable, string $cwd = './', string $optionValueAssigner = ' ') {
         $this->setExecutable($executable)
-             ->setRawOutput($rawOutput)
+             ->setCWD($cwd)
              ->setOptionValueAssigner($optionValueAssigner);
     }
 
@@ -67,9 +71,10 @@ abstract class Command
      * @return string
      */
     public function __toString() :string {
-        $options = $this->getOptionsString();
+        $options    = $this->getOptionsString();
+        $parameters = $this->getParametersString();
 
-        return $this->executable . ($options ?: '');
+        return $this->executable . ($options ?: '') . ($parameters ?: '');
     }
 
     /**
@@ -97,40 +102,36 @@ abstract class Command
     }
 
     /**
-     * @param bool $rawOutput
-     *
      * @return \xobotyi\rsync\Command
      * @throws \xobotyi\rsync\Exception\Command
      */
-    public function execute(bool $rawOutput = false) :self {
-        if (!$rawOutput) {
-            exec($this, $this->output, $this->code);
+    public function execute() :self {
+        $this->exitCode = 1;    // exit 0 on ok
+        $this->stdout   = '';   // output of the command
+        $this->stderr   = '';   // errors during execution
 
-            return $this;
-        }
+        $descriptor = [
+            0 => ["pipe", "r"],    // stdin is a pipe that the child will read from
+            1 => ["pipe", "w"],    // stdout is a pipe that the child will write to
+            2 => ["pipe", "w"]     // stderr is a pipe
+        ];
 
-        $this->output = '';
+        $proc = proc_open((string)$this, $descriptor, $pipes, $this->cwd);
 
-        if (!($handle = popen($this, "r"))) {
+        if ($proc === false) {
             throw new Exception\Command("Unable to execute command '{$this}'");
         }
 
-        while (!feof($handle)) {
-            $this->output .= fread($handle, 1024);
-        }
+        $this->stdout = trim(stream_get_contents($pipes[1]));
+        $this->stderr = trim(stream_get_contents($pipes[2]));
 
-        fclose($handle);
+        fclose($pipes[0]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
 
-        $this->output = explode("\n", $this->output);
+        $this->exitCode = proc_close($proc);
 
         return $this;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getCode() :?string {
-        return $this->code;
     }
 
     /**
@@ -240,15 +241,51 @@ abstract class Command
     }
 
     /**
-     * @return array
+     * @return string
+     */
+    public function getParametersString() :string {
+        if (!$this->parameters) {
+            return '';
+        }
+
+        $parametersStr = '';
+
+        foreach ($this->parameters as $value) {
+            $parametersStr .= ' ' . escapeshellarg($value);
+        }
+
+        return $parametersStr;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getExitCode() :?string {
+        return $this->exitCode;
+    }
+
+    /**
+     * @return string
      * @throws \xobotyi\rsync\Exception\Command
      */
-    public function getOutput() :array {
-        if (!$this->code) {
+    public function getStdout() :string {
+        if ($this->exitCode === null) {
             $this->execute();
         }
 
-        return $this->output;
+        return $this->stdout;
+    }
+
+    /**
+     * @return string
+     * @throws \xobotyi\rsync\Exception\Command
+     */
+    public function getStderr() :string {
+        if ($this->exitCode === null) {
+            $this->execute();
+        }
+
+        return $this->stderr;
     }
 
     /**
@@ -300,21 +337,21 @@ abstract class Command
     }
 
     /**
-     * @return bool
-     */
-    public function isRawOutput() :bool {
-        return $this->rawOutput;
-    }
-
-    /**
-     * @param bool $rawOutput
+     * @param string $cwd
      *
      * @return \xobotyi\rsync\Command
      */
-    public function setRawOutput(bool $rawOutput) :self {
-        $this->rawOutput = $rawOutput;
+    public function setCWD(string $cwd) :self {
+        $this->cwd = $cwd;
 
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCWD() :string {
+        return $this->cwd;
     }
 
     /**
@@ -339,7 +376,12 @@ abstract class Command
         }
 
         if (is_bool($val)) {
-            $this->options[$optName] = $val;
+            if ($val) {
+                $this->options[$optName] = $val;
+            }
+            else {
+                unset($this->options[$optName]);
+            }
 
             return $this;
         }

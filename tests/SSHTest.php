@@ -30,7 +30,6 @@ class SSHTest extends TestCase
     public function testSSH() {
         $ssh = new SSH();
 
-        $this->assertFalse($ssh->isRawOutput());
         $this->assertEquals(' ', $ssh->getOptionValueAssigner());
 
         $ssh->setParameters(['123', '321']);
@@ -52,7 +51,7 @@ class SSHTest extends TestCase
                              SSH::OPT_IPV4                => true,
                          ]);
         $this->assertNotEmpty((string)$ssh);
-        $this->assertNull($ssh->getCode());
+        $this->assertNull($ssh->getExitCode());
         $this->assertEquals('ssh', $ssh->getExecutable());
 
         php_uname('a', 'Linux');
