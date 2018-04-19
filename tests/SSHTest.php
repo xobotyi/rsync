@@ -18,7 +18,7 @@ function php_uname($mode = 'a', $return = null) {
 }
 
 function shell_exec($cmd) {
-    if ($cmd === 'which "ssh"') {
+    if ($cmd === 'which ssh') {
         return '/usr/bin/ssh';
     }
 

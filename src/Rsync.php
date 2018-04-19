@@ -645,7 +645,6 @@ class Rsync extends Command
     public function sync(string $from, string $to) :self {
 
         $this->setParameters([$from, $to]);
-        var_dump((string)$this);
         $this->execute()
              ->clearParameters();
 

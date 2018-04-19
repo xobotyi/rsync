@@ -251,39 +251,30 @@ abstract class Command
         $parametersStr = '';
 
         foreach ($this->parameters as $value) {
-            $parametersStr .= ' ' . escapeshellarg($value);
+            $parametersStr .= ' ' . $value;
         }
 
         return $parametersStr;
     }
 
     /**
-     * @return null|string
+     * @return string|null
      */
     public function getExitCode() :?string {
         return $this->exitCode;
     }
 
     /**
-     * @return string
-     * @throws \xobotyi\rsync\Exception\Command
+     * @return string|null
      */
-    public function getStdout() :string {
-        if ($this->exitCode === null) {
-            $this->execute();
-        }
-
+    public function getStdout() :?string {
         return $this->stdout;
     }
 
     /**
-     * @return string
-     * @throws \xobotyi\rsync\Exception\Command
+     * @return string|null
      */
-    public function getStderr() :string {
-        if ($this->exitCode === null) {
-            $this->execute();
-        }
+    public function getStderr() :?string {
 
         return $this->stderr;
     }
@@ -328,12 +319,12 @@ abstract class Command
                 $exec = ($exec ? $exec . ':' : '') . basename($exec);
             }
 
-            exec('where' . ' /Q ' . escapeshellarg($exec), $output, $code);
+            exec('where' . ' /Q ' . escapeshellcmd($exec), $output, $code);
 
             return $code === 0;
         }
 
-        return (bool)shell_exec('which' . ' ' . escapeshellarg($exec));
+        return (bool)shell_exec('which' . ' ' . escapeshellcmd($exec));
     }
 
     /**

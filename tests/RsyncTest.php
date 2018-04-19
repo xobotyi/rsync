@@ -7,8 +7,20 @@
 
 namespace xobotyi\rsync;
 
-
 use PHPUnit\Framework\TestCase;
+
+
+function proc_open($cmd, ?array $descriptorspec, ?array &$pipes, $cwd = null, ?array $env = null, ?array $other_options = null, $return = null) {
+    static $v;
+
+    $v = $return === null ? $v : ($return !== 0 ? $return : null);
+
+    if ($return === 0) {
+        return;
+    }
+
+    return $v === null ? \proc_open($cmd, $descriptorspec, $pipes, $cwd, $env, $other_options) : $v;
+}
 
 class RsyncTest extends TestCase
 {
@@ -27,7 +39,15 @@ class RsyncTest extends TestCase
         (new Rsync())->setOption(Rsync::OPT_INCLUDE_FROM, __DIR__ . '/some/fake/file');
     }
 
+    public function testException_procOpenFailure() {
+        $this->expectException(Exception\Command::class);
+        proc_open(null, null, $null, null, null, null, false);
+
+        (new Rsync())->sync('./src/*', './dest');
+    }
+
     public function testRsync() {
+        proc_open(null, null, $null, null, null, null, 0);
         $rsync = new Rsync([
                                Rsync::CONF_CWD     => __DIR__,
                                Rsync::CONF_SSH     => [
@@ -61,21 +81,19 @@ class RsyncTest extends TestCase
         unlink($incForm);
     }
 
-//    public function testRsyncSync() {
-//        $this->prepareDirectories();
-//
-//        $rsync = new Rsync([Rsync::CONF_CWD => __DIR__]);
-//
-//        $sourceDir = './src';
-//        $destDir   = './dest';
-//
-//        var_dump(is_dir($this->sourceDir));
-//
-//        $rsync->sync($sourceDir . '/*', $destDir);
-//        self::assertTrue($this->compareDirectories($sourceDir, $destDir));
-//
-//        $this->clearDirectories();
-//    }
+    public function testRsyncSync() {
+        $this->prepareDirectories();
+
+        $rsync = new Rsync([Rsync::CONF_CWD => __DIR__]);
+
+        $rsync->sync('./src/*', './dest');
+        self::assertEquals(0, $rsync->getExitCode());
+        self::assertEquals('', $rsync->getStderr());
+        self::assertEquals('', $rsync->getStdout());
+        self::assertTrue($this->compareDirectories($this->sourceDir, $this->destDir));
+
+        $this->clearDirectories();
+    }
 
     private function prepareDirectories() {
         $this->clearDirectories();
@@ -99,7 +117,7 @@ class RsyncTest extends TestCase
     }
 
     private function compareDirectories(string $dir1, string $dir2) :bool {
-        return !shell_exec("diff --brief " . escapeshellarg($dir1) . " " . escapeshellarg($dir2) . " 2>&1");
+        return !shell_exec("diff --brief " . $dir1 . " " . $dir2 . " 2>&1");
     }
 
     private function rmdirr(string $dir) :void {
