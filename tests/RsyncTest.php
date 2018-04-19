@@ -134,7 +134,12 @@ class RsyncTest extends TestCase
             shell_exec('dir ' . realpath($dir2) . ' /B > B.txt');
             shell_exec('fc A.txt B.txt > differences.txt');
 
-            return @file('differences.txt')[1] === "FC: no differences encountered" . PHP_EOL;
+            $res = @file('differences.txt')[1] === "FC: no differences encountered" . PHP_EOL;
+            unlink('A.txt');
+            unlink('B.txt');
+            unlink('differences.txt');
+
+            return $res;
         }
 
         return !shell_exec("diff --brief " . $dir1 . " " . $dir2 . " 2>&1");
