@@ -194,7 +194,7 @@ class SSH extends Command
             $this->setOptions($this->config[self::CONF_OPTIONS]);
         }
 
-        parent::__construct($this->config[self::CONF_EXECUTABLE], false);
+        parent::__construct($this->config[self::CONF_EXECUTABLE]);
     }
 
     /**

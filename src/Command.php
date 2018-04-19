@@ -204,7 +204,7 @@ abstract class Command
      * @return string
      */
     public function getOptionsString() :string {
-        if (!$this->options) {
+        if (empty($this->options)) {
             return '';
         }
 
@@ -244,7 +244,7 @@ abstract class Command
      * @return string
      */
     public function getParametersString() :string {
-        if (!$this->parameters) {
+        if (empty($this->parameters)) {
             return '';
         }
 
@@ -356,7 +356,7 @@ abstract class Command
 
     /**
      * @param string $optName
-     * @param bool   $val
+     * @param mixed  $val
      *
      * @return $this
      * @throws \xobotyi\rsync\Exception\Command
