@@ -16,7 +16,7 @@ function proc_open($cmd, ?array $descriptorspec, ?array &$pipes, $cwd = null, ?a
     $v = $return === null ? $v : ($return !== 0 ? $return : null);
 
     if ($return === 0) {
-        return;
+        return null;
     }
 
     return $v === null ? \proc_open($cmd, $descriptorspec, $pipes, $cwd, $env, $other_options) : $v;
@@ -46,10 +46,16 @@ class RsyncTest extends TestCase
         (new Rsync())->sync('./src/*', './dest');
     }
 
-    public function testException_unstringableParameter() {
+    public function testException_unstringableParameter1() {
         $this->expectException(Exception\Command::class);
 
         (new Rsync())->addParameter(null);
+    }
+
+    public function testException_unstringableParameter2() {
+        $this->expectException(Exception\Command::class);
+
+        (new Rsync())->setParameters([null]);
     }
 
     public function testRsync() {
