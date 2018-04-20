@@ -36,39 +36,6 @@ class RsyncTest extends TestCase
         $this->rmdirr($this->destDir);
     }
 
-    private function compareDirectories(string $dir1, string $dir2) :bool {
-        if (substr(strtolower(php_uname('s')), 0, 3) === 'win') {
-            shell_exec('dir ' . realpath($dir1) . ' /B > A.txt');
-            shell_exec('dir ' . realpath($dir2) . ' /B > B.txt');
-            shell_exec('fc A.txt B.txt > differences.txt');
-
-            $res = @file('differences.txt')[1] === "FC: no differences encountered" . PHP_EOL;
-            unlink('A.txt');
-            unlink('B.txt');
-            unlink('differences.txt');
-
-            return $res;
-        }
-
-        return !shell_exec("diff --brief " . $dir1 . " " . $dir2 . " 2>&1");
-    }
-
-    private function prepareDirectories() {
-        $this->clearDirectories();
-
-        mkdir($this->sourceDir);
-        mkdir($this->destDir);
-
-        touch($this->sourceDir . '/file1');
-        touch($this->sourceDir . '/file2');
-
-        if (!is_file($this->sourceDir . '/file1') || !is_file($this->sourceDir . '/file2')) {
-            $this->clearDirectories();
-
-            throw new \Exception('Failed to prepare test diretories and/or files');
-        }
-    }
-
     private function rmdirr(string $dir) :void {
         if (!is_dir($dir)) {
             return;
@@ -159,6 +126,39 @@ class RsyncTest extends TestCase
         self::assertTrue($this->compareDirectories($this->sourceDir, $this->destDir));
 
         $this->clearDirectories();
+    }
+
+    private function prepareDirectories() {
+        $this->clearDirectories();
+
+        mkdir($this->sourceDir);
+        mkdir($this->destDir);
+
+        touch($this->sourceDir . '/file1');
+        touch($this->sourceDir . '/file2');
+
+        if (!is_file($this->sourceDir . '/file1') || !is_file($this->sourceDir . '/file2')) {
+            $this->clearDirectories();
+
+            throw new \Exception('Failed to prepare test diretories and/or files');
+        }
+    }
+
+    private function compareDirectories(string $dir1, string $dir2) :bool {
+        if (substr(strtolower(php_uname('s')), 0, 3) === 'win') {
+            shell_exec('dir ' . realpath($dir1) . ' /B > A.txt');
+            shell_exec('dir ' . realpath($dir2) . ' /B > B.txt');
+            shell_exec('fc A.txt B.txt > differences.txt');
+
+            $res = @file('differences.txt')[1] === "FC: no differences encountered" . PHP_EOL;
+            unlink('A.txt');
+            unlink('B.txt');
+            unlink('differences.txt');
+
+            return $res;
+        }
+
+        return !shell_exec("diff --brief " . $dir1 . " " . $dir2 . " 2>&1");
     }
 
     public function testRsyncWithSSH() {

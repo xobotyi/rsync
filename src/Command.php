@@ -32,10 +32,6 @@ abstract class Command
      */
     private $exitCode;
     /**
-     * @var string
-     */
-    private $optionValueAssigner = ' ';
-    /**
      * @var array
      */
     private $options = [];
@@ -57,14 +53,12 @@ abstract class Command
      *
      * @param string $executable
      * @param string $cwd
-     * @param string $optionValueAssigner
      *
      * @throws \xobotyi\rsync\Exception\Command
      */
-    public function __construct(string $executable, string $cwd = './', string $optionValueAssigner = ' ') {
+    public function __construct(string $executable, string $cwd = './') {
         $this->setExecutable($executable)
-             ->setCWD($cwd)
-             ->setOptionValueAssigner($optionValueAssigner);
+             ->setCWD($cwd);
     }
 
     /**
@@ -103,13 +97,13 @@ abstract class Command
 
             if ($this->OPTIONS_LIST[$opt]['repeatable'] ?? false) {
                 foreach ($value as $val) {
-                    $parametrizedOptions .= $option . $this->optionValueAssigner . escapeshellarg($val);
+                    $parametrizedOptions .= $option . ' ' . escapeshellarg($val);
                 }
 
                 continue;
             }
 
-            $parametrizedOptions .= $option . $this->optionValueAssigner . escapeshellarg($value);
+            $parametrizedOptions .= $option . ' ' . escapeshellarg($value);
         }
 
         $shortOptions        = rtrim($shortOptions) ?: '';
@@ -254,24 +248,6 @@ abstract class Command
      */
     public function getExitCode() :?string {
         return $this->exitCode;
-    }
-
-    /**
-     * @return string
-     */
-    public function getOptionValueAssigner() :string {
-        return $this->optionValueAssigner;
-    }
-
-    /**
-     * @param string $optionValueAssigner
-     *
-     * @return \xobotyi\rsync\Command
-     */
-    public function setOptionValueAssigner(string $optionValueAssigner) :self {
-        $this->optionValueAssigner = $optionValueAssigner;
-
-        return $this;
     }
 
     /**

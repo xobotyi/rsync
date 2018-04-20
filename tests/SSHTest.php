@@ -30,8 +30,6 @@ class SSHTest extends TestCase
     public function testSSH() {
         $ssh = new SSH();
 
-        $this->assertEquals(' ', $ssh->getOptionValueAssigner());
-
         $ssh->setParameters(['123', '321']);
         $this->assertEquals(['123', '321'], $ssh->getParameters());
         $ssh->addParameter(1);
