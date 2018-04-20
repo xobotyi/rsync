@@ -106,9 +106,9 @@ abstract class Command
             $parametrizedOptions .= $option . ' ' . escapeshellarg($value);
         }
 
-        $shortOptions        = rtrim($shortOptions) ?: '';
-        $longOptions         = rtrim($longOptions) ?: '';
-        $parametrizedOptions = rtrim($parametrizedOptions) ?: '';
+        $shortOptions        = $shortOptions ?: '';
+        $longOptions         = $longOptions ?: '';
+        $parametrizedOptions = $parametrizedOptions ?: '';
 
         return ($shortOptions ? ' -' . $shortOptions : '')
                . $longOptions
