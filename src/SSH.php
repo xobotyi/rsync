@@ -200,7 +200,7 @@ class SSH extends Command
 
     /**
      * @param string $optName
-     * @param bool   $val
+     * @param mixed  $val
      *
      * @return \xobotyi\rsync\SSH
      * @throws Exception\Command

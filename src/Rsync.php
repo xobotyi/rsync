@@ -647,7 +647,7 @@ class Rsync extends Command
 
     /**
      * @param string $optName
-     * @param bool   $val
+     * @param mixed  $val
      *
      * @return \xobotyi\rsync\Rsync
      * @throws \xobotyi\rsync\Exception\Command
