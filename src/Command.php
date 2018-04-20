@@ -67,6 +67,20 @@ abstract class Command
              ->setOptionValueAssigner($optionValueAssigner);
     }
 
+    private static function StoreOption(array &$arrayToStore, string $option, $value) :void {
+        if ($value === false) {
+            unset($arrayToStore[$option]);
+
+            return;
+        }
+
+        if ($value !== true && !is_array($value) && !self::isStringable($value)) {
+            throw new Exception\Command("Option {$option} got non-stringable value");
+        }
+
+        $arrayToStore[$option] = $value;
+    }
+
     /**
      * @return string
      */
@@ -366,18 +380,7 @@ abstract class Command
             throw new Exception\Command("Option {$optName} is not supported");
         }
 
-        if (is_bool($val)) {
-            if ($val) {
-                $this->options[$optName] = $val;
-            }
-            else {
-                unset($this->options[$optName]);
-            }
-
-            return $this;
-        }
-
-        if (!($this->OPTIONS_LIST[$optName]['argument'] ?? false)) {
+        if (!is_bool($val) && !($this->OPTIONS_LIST[$optName]['argument'] ?? false)) {
             throw new Exception\Command("Option {$optName} can not have any argument");
         }
 
@@ -386,24 +389,14 @@ abstract class Command
                 throw new Exception\Command("Option {$optName} is not repeatable (its value cant be an array)");
             }
 
-            $this->options[$optName] = [];
-
             foreach ($val as &$value) {
                 if (!self::isStringable($value)) {
                     throw new Exception\Command("Option {$optName} got non-stringable value");
                 }
-
-                $this->options[$optName][] = (string)$value;
             }
-
-            return $this;
         }
 
-        if (!self::isStringable($val)) {
-            throw new Exception\Command("Option {$optName} got non-stringable value");
-        }
-
-        $this->options[$optName] = (string)$val;
+        self::StoreOption($this->options, $optName, $val);
 
         return $this;
     }
