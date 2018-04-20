@@ -503,7 +503,7 @@ class Rsync extends Command
         self::OPT_DEVICES             => ['option' => 'devices'],
         self::OPT_DIRS                => ['option' => 'd'],
         self::OPT_DRY_RUN             => ['option' => 'n'],
-        self::OPT_EXCLUDE             => ['option' => 'exclude', 'argument' => true],
+        self::OPT_EXCLUDE             => ['option' => 'exclude', 'argument' => true, 'repeatable' => true],
         self::OPT_EXCLUDE_FROM        => ['option' => 'exclude-from', 'argument' => true],
         self::OPT_EXECUTABILITY       => ['option' => 'E'],
         self::OPT_EXISTING            => ['option' => 'existing'],
@@ -521,7 +521,7 @@ class Rsync extends Command
         self::OPT_IGNORE_ERRORS       => ['option' => 'ignore-errors'],
         self::OPT_IGNORE_EXISTING     => ['option' => 'ignore-existing'],
         self::OPT_IGNORE_TIMES        => ['option' => 'I'],
-        self::OPT_INCLUDE             => ['option' => 'include', 'argument' => true],
+        self::OPT_INCLUDE             => ['option' => 'include', 'argument' => true, 'repeatable' => true],
         self::OPT_INCLUDE_FROM        => ['option' => 'include-from', 'argument' => true],
         self::OPT_INPLACE             => ['option' => 'inplace'],
         self::OPT_IPV4                => ['option' => '4'],
@@ -601,6 +601,14 @@ class Rsync extends Command
         parent::__construct($this->config[self::CONF_EXECUTABLE], $this->config[self::CONF_CWD]);
     }
 
+    public function __toString() :string {
+        if (isset($this->config[self::CONF_SSH])) {
+            $this->setOption(self::OPT_RSH, (string)$this->config[self::CONF_SSH]);
+        }
+
+        return parent::__toString();
+    }
+
     public function getSSH() :?SSH {
         return $this->config[self::CONF_SSH];
     }
@@ -640,14 +648,6 @@ class Rsync extends Command
         }
 
         return $this;
-    }
-
-    public function __toString() :string {
-        if (isset($this->config[self::CONF_SSH])) {
-            $this->setOption(self::OPT_RSH, (string)$this->config[self::CONF_SSH]);
-        }
-
-        return parent::__toString();
     }
 
     public function sync(string $from, string $to) :self {
