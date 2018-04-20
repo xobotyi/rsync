@@ -68,35 +68,6 @@ abstract class Command
     }
 
     /**
-     * @param array  $arrayToStore
-     * @param string $option
-     * @param        $value
-     *
-     * @throws \xobotyi\rsync\Exception\Command
-     */
-    private static function StoreOption(array &$arrayToStore, string $option, $value) :void {
-        if ($value === true) {
-        }
-        else if ($value === false) {
-            unset($arrayToStore[$option]);
-
-            return;
-        }
-        else if (is_array($value)) {
-            foreach ($value as &$val) {
-                if (!self::isStringable($val)) {
-                    throw new Exception\Command("Option {$option} has non-stringable element");
-                }
-            }
-        }
-        else if (!self::isStringable($value)) {
-            throw new Exception\Command("Option {$option} got non-stringable value");
-        }
-
-        $arrayToStore[$option] = $value;
-    }
-
-    /**
      * @return string
      */
     public function __toString() :string {
@@ -104,6 +75,67 @@ abstract class Command
         $parameters = $this->getParametersString();
 
         return $this->executable . ($options ?: '') . ($parameters ?: '');
+    }
+
+    /**
+     * @return string
+     */
+    public function getOptionsString() :string {
+        if (empty($this->options)) {
+            return '';
+        }
+
+        $shortOptions = $longOptions = $parametrizedOptions = '';
+
+        foreach ($this->options as $opt => $value) {
+            $option       = $this->OPTIONS_LIST[$opt]['option'];
+            $isLongOption = strlen($option) > 1;
+
+            if (!($this->OPTIONS_LIST[$opt]['argument'] ?? false)) {
+                $isLongOption
+                    ? $longOptions .= ' --' . $option
+                    : $shortOptions .= $option;
+
+                continue;
+            }
+
+            $option = ($isLongOption > 1 ? ' --' : ' -') . $option;
+
+            if ($this->OPTIONS_LIST[$opt]['repeatable'] ?? false) {
+                foreach ($value as $val) {
+                    $parametrizedOptions .= $option . $this->optionValueAssigner . escapeshellarg($val);
+                }
+
+                continue;
+            }
+
+            $parametrizedOptions .= $option . $this->optionValueAssigner . escapeshellarg($value);
+        }
+
+        $shortOptions        = rtrim($shortOptions) ?: '';
+        $longOptions         = rtrim($longOptions) ?: '';
+        $parametrizedOptions = rtrim($parametrizedOptions) ?: '';
+
+        return ($shortOptions ? ' -' . $shortOptions : '')
+               . $longOptions
+               . $parametrizedOptions;
+    }
+
+    /**
+     * @return string
+     */
+    public function getParametersString() :string {
+        if (empty($this->parameters)) {
+            return '';
+        }
+
+        $parametersStr = '';
+
+        foreach ($this->parameters as $value) {
+            $parametersStr .= ' ' . $value;
+        }
+
+        return $parametersStr;
     }
 
     /**
@@ -119,6 +151,15 @@ abstract class Command
         $this->parameters[] = $parameter;
 
         return $this;
+    }
+
+    /**
+     * @param $var
+     *
+     * @return bool
+     */
+    private static function isStringable(&$var) :bool {
+        return (\is_string($var) || \is_numeric($var) || (\is_object($var) && \method_exists($var, '__toString')));
     }
 
     /**
@@ -255,47 +296,57 @@ abstract class Command
     }
 
     /**
-     * @return string
+     * @param string $optName
+     * @param mixed  $val
+     *
+     * @return $this
+     * @throws \xobotyi\rsync\Exception\Command
      */
-    public function getOptionsString() :string {
-        if (empty($this->options)) {
-            return '';
+    public function setOption(string $optName, $val = true) {
+        if (!($this->OPTIONS_LIST[$optName] ?? false)) {
+            throw new Exception\Command("Option {$optName} is not supported");
         }
 
-        $shortOptions = $longOptions = $parametrizedOptions = '';
+        if (!is_bool($val) && !($this->OPTIONS_LIST[$optName]['argument'] ?? false)) {
+            throw new Exception\Command("Option {$optName} can not have any argument");
+        }
 
-        foreach ($this->options as $opt => $value) {
-            $option       = $this->OPTIONS_LIST[$opt]['option'];
-            $isLongOption = strlen($option) > 1;
+        if (is_array($val) && !($this->OPTIONS_LIST[$optName]['repeatable'] ?? false)) {
+            throw new Exception\Command("Option {$optName} is not repeatable (its value cant be an array)");
+        }
 
-            if (!($this->OPTIONS_LIST[$opt]['argument'] ?? false)) {
-                $isLongOption
-                    ? $longOptions .= ' --' . $option
-                    : $shortOptions .= $option;
+        self::StoreOption($this->options, $optName, $val);
 
-                continue;
-            }
+        return $this;
+    }
 
-            $option = ($isLongOption > 1 ? ' --' : ' -') . $option;
+    /**
+     * @param array  $arrayToStore
+     * @param string $option
+     * @param        $value
+     *
+     * @throws \xobotyi\rsync\Exception\Command
+     */
+    private static function StoreOption(array &$arrayToStore, string $option, $value) :void {
+        if ($value === true) {
+        }
+        else if ($value === false) {
+            unset($arrayToStore[$option]);
 
-            if ($this->OPTIONS_LIST[$opt]['repeatable'] ?? false) {
-                foreach ($value as $val) {
-                    $parametrizedOptions .= $option . $this->optionValueAssigner . escapeshellarg($val);
+            return;
+        }
+        else if (is_array($value)) {
+            foreach ($value as &$val) {
+                if (!self::isStringable($val)) {
+                    throw new Exception\Command("Option {$option} has non-stringable element");
                 }
-
-                continue;
             }
-
-            $parametrizedOptions .= $option . $this->optionValueAssigner . escapeshellarg($value);
+        }
+        else if (!self::isStringable($value)) {
+            throw new Exception\Command("Option {$option} got non-stringable value");
         }
 
-        $shortOptions        = rtrim($shortOptions) ?: '';
-        $longOptions         = rtrim($longOptions) ?: '';
-        $parametrizedOptions = rtrim($parametrizedOptions) ?: '';
-
-        return ($shortOptions ? ' -' . $shortOptions : '')
-               . $longOptions
-               . $parametrizedOptions;
+        $arrayToStore[$option] = $value;
     }
 
     /**
@@ -324,23 +375,6 @@ abstract class Command
         $this->parameters = $params;
 
         return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getParametersString() :string {
-        if (empty($this->parameters)) {
-            return '';
-        }
-
-        $parametersStr = '';
-
-        foreach ($this->parameters as $value) {
-            $parametersStr .= ' ' . $value;
-        }
-
-        return $parametersStr;
     }
 
     /**
@@ -376,39 +410,5 @@ abstract class Command
         }
 
         return (bool)shell_exec('which' . ' ' . escapeshellcmd($exec));
-    }
-
-    /**
-     * @param $var
-     *
-     * @return bool
-     */
-    private static function isStringable(&$var) :bool {
-        return (\is_string($var) || \is_numeric($var) || (\is_object($var) && \method_exists($var, '__toString')));
-    }
-
-    /**
-     * @param string $optName
-     * @param mixed  $val
-     *
-     * @return $this
-     * @throws \xobotyi\rsync\Exception\Command
-     */
-    public function setOption(string $optName, $val = true) {
-        if (!($this->OPTIONS_LIST[$optName] ?? false)) {
-            throw new Exception\Command("Option {$optName} is not supported");
-        }
-
-        if (!is_bool($val) && !($this->OPTIONS_LIST[$optName]['argument'] ?? false)) {
-            throw new Exception\Command("Option {$optName} can not have any argument");
-        }
-
-        if (is_array($val) && !($this->OPTIONS_LIST[$optName]['repeatable'] ?? false)) {
-            throw new Exception\Command("Option {$optName} is not repeatable (its value cant be an array)");
-        }
-
-        self::StoreOption($this->options, $optName, $val);
-
-        return $this;
     }
 }

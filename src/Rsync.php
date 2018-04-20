@@ -627,6 +627,29 @@ class Rsync extends Command
     }
 
     /**
+     * @param $ssh
+     *
+     * @return \xobotyi\rsync\Rsync
+     * @throws \xobotyi\rsync\Exception\Command
+     */
+    public function setSSH($ssh) :self {
+        if ($ssh instanceof SSH) {
+            $this->config[self::CONF_SSH] = $ssh;
+        }
+        else if (is_array($ssh)) {
+            $this->config[self::CONF_SSH] = new SSH($ssh);
+        }
+        else if ($ssh === null) {
+            $this->config[self::CONF_SSH] = null;
+        }
+        else {
+            throw new Exception\Command('ssh config has to be an instance of \xobotyi\rsync\SSH, array or null, got ' . gettype($ssh));
+        }
+
+        return $this;
+    }
+
+    /**
      * @return string
      * @throws \xobotyi\rsync\Exception\Command
      */
@@ -636,13 +659,6 @@ class Rsync extends Command
         }
 
         return parent::__toString();
-    }
-
-    /**
-     * @return null|\xobotyi\rsync\SSH
-     */
-    public function getSSH() :?SSH {
-        return $this->config[self::CONF_SSH];
     }
 
     /**
@@ -673,26 +689,10 @@ class Rsync extends Command
     }
 
     /**
-     * @param $ssh
-     *
-     * @return \xobotyi\rsync\Rsync
-     * @throws \xobotyi\rsync\Exception\Command
+     * @return null|\xobotyi\rsync\SSH
      */
-    public function setSSH($ssh) :self {
-        if ($ssh instanceof SSH) {
-            $this->config[self::CONF_SSH] = $ssh;
-        }
-        else if (is_array($ssh)) {
-            $this->config[self::CONF_SSH] = new SSH($ssh);
-        }
-        else if ($ssh === null) {
-            $this->config[self::CONF_SSH] = null;
-        }
-        else {
-            throw new Exception\Command('ssh config has to be an instance of \xobotyi\rsync\SSH, array or null, got ' . gettype($ssh));
-        }
-
-        return $this;
+    public function getSSH() :?SSH {
+        return $this->config[self::CONF_SSH];
     }
 
     /**
