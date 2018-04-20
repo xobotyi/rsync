@@ -210,7 +210,7 @@ class SSH extends Command
             case self::OPT_CONFIG_FILE:
             case self::OPT_PASSWORD_FILE:
             case self::OPT_IDENTIFICATION_FILE:
-                if (!is_readable($val)) {
+                if (!is_string($val) || !is_readable($val)) {
                     throw new Exception\Command("File {$val} for option {$optName} is not readable");
                 }
                 $val = realpath($val);

@@ -659,7 +659,7 @@ class Rsync extends Command
             case self::OPT_EXCLUDE_FROM:
             case self::OPT_INCLUDE_FROM:
             case self::OPT_FILES_FROM:
-                if (!is_readable($val)) {
+                if (!is_string($val) || !is_readable($val)) {
                     throw new Exception\Command("File {$val} for option {$optName} is not readable");
                 }
 
