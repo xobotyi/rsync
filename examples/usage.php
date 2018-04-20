@@ -7,12 +7,27 @@
 
 include_once __DIR__ . '/../vendor/autoload.php';
 
-use xobotyi\rsync;
+use xobotyi\rsync\Rsync;
+use xobotyi\rsync\SSH;
 
-$ssh = new rsync\SSH([
-                         rsync\SSH::CONF_EXECUTABLE => 'C:\rsync\ssh.exe',
-                         rsync\SSH::CONF_OPTIONS    => [
-                             rsync\SSH::OPT_IDENTIFICATION_FILE => __DIR__ . '/../tests/ident.txt',
-                             rsync\SSH::OPT_OPTION              => ['BatchMode=yes', 'StrictHostKeyChecking=no'],
-                         ],
-                     ]);
+$rsync = new Rsync([
+                       Rsync::CONF_CWD        => __DIR__,
+                       Rsync::CONF_EXECUTABLE => '/even/alternative/executable/rsync.exe',
+                       Rsync::CONF_SSH        => [
+                           SSH::CONF_EXECUTABLE => '/even/alternative/executable/ssh.exe',
+                           SSH::CONF_OPTIONS    => [
+                               SSH::OPT_OPTION              => ['BatchMode=yes', 'StrictHostKeyChecking=no'],
+                               SSH::OPT_IDENTIFICATION_FILE => './path/to/ident',
+                               SSH::OPT_PORT                => 2222,
+                           ],
+                       ],
+                   ]);
+$rsync->sync('./relative/path/to/source', 'user@some.remote.lan:/abs/path/to/destination');
+
+$rsync->setExecutable('ssh')
+      ->setOption(SSH::OPT_OPTION, false)// 'false' value turns off the options
+      ->setOptions([
+                       SSH::OPT_IDENTIFICATION_FILE => './new/path/to/ident',
+                       SSH::OPT_PORT                => 22,
+                   ]);
+$rsync->sync('/new/path/to/source', 'user@some.remote.lan:/abs/path/to/destination');

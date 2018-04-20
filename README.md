@@ -25,3 +25,66 @@
         <img alt="Total Downloads" src="https://poser.pugx.org/xobotyi/rsync/downloads" />
     </a>
 </p>
+
+## About  
+Rsync is a pure PHP 7.1+ dependency-free wrapper for rsync client. It provides you a simple way to abstract from command line control rsync right from php. Library uses PSR-4 autoloader standard and always has 100% tests coverage.  
+There is no need to tell about rsync, except the fact that php doesn't has any faster or equal built-in way to upload files to remote server.
+
+Library supports whole bunch of options and parameters implemented in rsync client version 3.1.2 
+
+## Why Rsync?
+1) It is small and fully covered with tests
+2) It is well documented
+3) I'm eating my own sweet pie=)
+4) Supports whole bunch of parameters and options of rsync and ssh
+5) Easy to use
+6) Works on Windows (ofcourse id you installed ssh and rsync clients for Windows)
+
+
+## Requirements
+- [PHP](//php.net/) 7.1+
+- PHP config `variables_order` must contain `E`, 4ex: `variables_order=EGPCS`.  
+Otherwise you will have to manually specify absolute path to rsync and ssh binaries (at least on Windows)
+- rsync client 3.1.2 +
+
+## Installation
+Install with composer
+```bash
+composer require xobotyi/rsync
+```
+
+## Usage
+_Simplest:_
+```php
+use xobotyi\rsync\Rsync;
+
+$rsync = new Rsync();
+$rsync->sync('/path/to/source', '/path/to/destination');
+```
+_If you need SSH:_
+```php
+use xobotyi\rsync\Rsync;
+use xobotyi\rsync\SSH;
+
+$rsync = new Rsync([
+                       Rsync::CONF_CWD        => __DIR__,
+                       Rsync::CONF_EXECUTABLE => '/even/alternative/executable/rsync.exe',
+                       Rsync::CONF_SSH        => [
+                           SSH::CONF_EXECUTABLE => '/even/alternative/executable/ssh.exe',
+                           SSH::CONF_OPTIONS    => [
+                               SSH::OPT_OPTION              => ['BatchMode=yes', 'StrictHostKeyChecking=no'],
+                               SSH::OPT_IDENTIFICATION_FILE => './path/to/ident',
+                               SSH::OPT_PORT                => 2222,
+                           ],
+                       ],
+                   ]);
+$rsync->sync('./relative/path/to/source', 'user@some.remote.lan:/abs/path/to/destination');
+
+$rsync->setExecutable('ssh')
+      ->setOption(SSH::OPT_OPTION, false)// 'false' value turns off the options
+      ->setOptions([
+                       SSH::OPT_IDENTIFICATION_FILE => './new/path/to/ident',
+                       SSH::OPT_PORT                => 22,
+                   ]);
+$rsync->sync('/new/path/to/source', 'user@some.remote.lan:/abs/path/to/destination');
+```
