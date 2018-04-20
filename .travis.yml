@@ -10,10 +10,12 @@ matrix:
   fast_finish: true
 
 before_script:
+  - chmod +x scripts/ci-prerun.sh
   - travis_retry composer self-update
   - travis_retry composer update --no-interaction --dev
 
 script:
+  - scripts/ci-prerun.sh
   - vendor/bin/phpunit --coverage-clover build/logs/clover.xml
   - vendor/bin/phpunit
 

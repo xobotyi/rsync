@@ -598,7 +598,7 @@ class Rsync extends Command
         $this->setOptions($this->config[self::CONF_OPTIONS])
              ->setSSH($this->config[self::CONF_SSH]);
 
-        parent::__construct($this->config[self::CONF_EXECUTABLE], $this->config[self::CONF_CWD], '=');
+        parent::__construct($this->config[self::CONF_EXECUTABLE], $this->config[self::CONF_CWD]);
     }
 
     public function getSSH() :?SSH {
@@ -640,6 +640,14 @@ class Rsync extends Command
         }
 
         return $this;
+    }
+
+    public function __toString() :string {
+        if (isset($this->config[self::CONF_SSH])) {
+            $this->setOption(self::OPT_RSH, (string)$this->config[self::CONF_SSH]);
+        }
+
+        return parent::__toString();
     }
 
     public function sync(string $from, string $to) :self {

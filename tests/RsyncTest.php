@@ -24,8 +24,62 @@ function proc_open($cmd, ?array $descriptorspec, ?array &$pipes, $cwd = null, ?a
 
 class RsyncTest extends TestCase
 {
-    private $sourceDir = __DIR__ . '/src';
     private $destDir   = __DIR__ . '/dest';
+    private $sourceDir = __DIR__ . '/src';
+
+    public function __destruct() {
+        $this->clearDirectories();
+    }
+
+    private function clearDirectories() {
+        $this->rmdirr($this->sourceDir);
+        $this->rmdirr($this->destDir);
+    }
+
+    private function compareDirectories(string $dir1, string $dir2) :bool {
+        if (substr(strtolower(php_uname('s')), 0, 3) === 'win') {
+            shell_exec('dir ' . realpath($dir1) . ' /B > A.txt');
+            shell_exec('dir ' . realpath($dir2) . ' /B > B.txt');
+            shell_exec('fc A.txt B.txt > differences.txt');
+
+            $res = @file('differences.txt')[1] === "FC: no differences encountered" . PHP_EOL;
+            unlink('A.txt');
+            unlink('B.txt');
+            unlink('differences.txt');
+
+            return $res;
+        }
+
+        return !shell_exec("diff --brief " . $dir1 . " " . $dir2 . " 2>&1");
+    }
+
+    private function prepareDirectories() {
+        $this->clearDirectories();
+
+        mkdir($this->sourceDir);
+        mkdir($this->destDir);
+
+        touch($this->sourceDir . '/file1');
+        touch($this->sourceDir . '/file2');
+
+        if (!is_file($this->sourceDir . '/file1') || !is_file($this->sourceDir . '/file2')) {
+            $this->clearDirectories();
+
+            throw new \Exception('Failed to prepare test diretories and/or files');
+        }
+    }
+
+    private function rmdirr(string $dir) :void {
+        if (!is_dir($dir)) {
+            return;
+        }
+
+        foreach (glob($dir . '/*') as $path) {
+            is_dir($path) ? $this->rmdirr($path) : unlink($path);
+        }
+
+        rmdir($dir);
+    }
 
     public function testException_badSSH() {
         $this->expectException(Exception\Command::class);
@@ -107,57 +161,42 @@ class RsyncTest extends TestCase
         $this->clearDirectories();
     }
 
-    private function prepareDirectories() {
-        $this->clearDirectories();
+    public function testRsyncWithSSH() {
 
-        mkdir($this->sourceDir);
-        mkdir($this->destDir);
+        $rsync = new Rsync([
+                               Rsync::CONF_CWD => __DIR__,
+                               Rsync::CONF_SSH => [
+                                   SSH::CONF_OPTIONS => [
+                                       SSH::OPT_OPTION => ['BatchMode=yes', 'StrictHostKeyChecking=no'],
+                                   ],
+                               ],
+                           ]);
 
-        touch($this->sourceDir . '/file1');
-        touch($this->sourceDir . '/file2');
+        $this->prepareDirectories();
+        self::assertFalse($this->compareDirectories($this->sourceDir, $this->destDir));
 
-        if (!is_file($this->sourceDir . '/file1') || !is_file($this->sourceDir . '/file2')) {
-            $this->clearDirectories();
-
-            throw new \Exception('Failed to prepare test diretories and/or files');
-        }
-    }
-
-    private function clearDirectories() {
-        $this->rmdirr($this->sourceDir);
-        $this->rmdirr($this->destDir);
-    }
-
-    private function compareDirectories(string $dir1, string $dir2) :bool {
         if (substr(strtolower(php_uname('s')), 0, 3) === 'win') {
-            shell_exec('dir ' . realpath($dir1) . ' /B > A.txt');
-            shell_exec('dir ' . realpath($dir2) . ' /B > B.txt');
-            shell_exec('fc A.txt B.txt > differences.txt');
-
-            $res = @file('differences.txt')[1] === "FC: no differences encountered" . PHP_EOL;
-            unlink('A.txt');
-            unlink('B.txt');
-            unlink('differences.txt');
-
-            return $res;
+            $this->assertEquals('rsync -e "ssh -o  BatchMode=yes  -o  StrictHostKeyChecking=no "', (string)$rsync);
         }
+        else {
+            $this->assertEquals("rsync -e 'ssh -o '\''BatchMode=yes'\'' -o '\''StrictHostKeyChecking=no'\'''", (string)$rsync);
 
-        return !shell_exec("diff --brief " . $dir1 . " " . $dir2 . " 2>&1");
-    }
+            $user      = getenv('USER');
+            $home      = getenv('HOME');
+            $identFile = $home . '/.ssh/id_rsa_rsync_test';
 
-    private function rmdirr(string $dir) :void {
-        if (!is_dir($dir)) {
-            return;
+            if (!is_file($identFile)) {
+                $this->markTestIncomplete('Unable to perform real SSH rsync, private key is missing');
+            }
+
+            $rsync->getSSH()->setOptions([
+                                             SSH::OPT_IDENTIFICATION_FILE => $identFile,
+                                             SSH::OPT_PORT                => 2222,
+                                         ]);
+
+            $rsync->sync('./src/*', $user . '@localhost:' . $this->destDir);
+
+            self::assertTrue($this->compareDirectories($this->sourceDir, $this->destDir));
         }
-
-        foreach (glob($dir . '/*') as $path) {
-            is_dir($path) ? $this->rmdirr($path) : unlink($path);
-        }
-
-        rmdir($dir);
-    }
-
-    public function __destruct() {
-        $this->clearDirectories();
     }
 }
