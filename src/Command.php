@@ -67,14 +67,29 @@ abstract class Command
              ->setOptionValueAssigner($optionValueAssigner);
     }
 
+    /**
+     * @param array  $arrayToStore
+     * @param string $option
+     * @param        $value
+     *
+     * @throws \xobotyi\rsync\Exception\Command
+     */
     private static function StoreOption(array &$arrayToStore, string $option, $value) :void {
-        if ($value === false) {
+        if ($value === true) {
+        }
+        else if ($value === false) {
             unset($arrayToStore[$option]);
 
             return;
         }
-
-        if ($value !== true && !is_array($value) && !self::isStringable($value)) {
+        else if (is_array($value)) {
+            foreach ($value as &$val) {
+                if (!self::isStringable($val)) {
+                    throw new Exception\Command("Option {$option} has non-stringable element");
+                }
+            }
+        }
+        else if (!self::isStringable($value)) {
             throw new Exception\Command("Option {$option} got non-stringable value");
         }
 
@@ -384,16 +399,8 @@ abstract class Command
             throw new Exception\Command("Option {$optName} can not have any argument");
         }
 
-        if (is_array($val)) {
-            if (!($this->OPTIONS_LIST[$optName]['repeatable'] ?? false)) {
-                throw new Exception\Command("Option {$optName} is not repeatable (its value cant be an array)");
-            }
-
-            foreach ($val as &$value) {
-                if (!self::isStringable($value)) {
-                    throw new Exception\Command("Option {$optName} got non-stringable value");
-                }
-            }
+        if (is_array($val) && !($this->OPTIONS_LIST[$optName]['repeatable'] ?? false)) {
+            throw new Exception\Command("Option {$optName} is not repeatable (its value cant be an array)");
         }
 
         self::StoreOption($this->options, $optName, $val);

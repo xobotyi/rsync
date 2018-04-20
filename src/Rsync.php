@@ -464,11 +464,26 @@ class Rsync extends Command
      */
     public const OPT_XATTRS = 'xattrs';
 
+    /**
+     * Path to rsync executable
+     */
     public const CONF_EXECUTABLE = 'executable';
-    public const CONF_CWD        = 'cwd';
-    public const CONF_SSH        = 'ssh';
-    public const CONF_OPTIONS    = 'options';
+    /**
+     * Path to CWD of rsync execution
+     */
+    public const CONF_CWD = 'cwd';
+    /**
+     * Array of configs for SSH instance or SSH instance itself
+     */
+    public const CONF_SSH = 'ssh';
+    /**
+     * Array of options for rsync
+     */
+    public const CONF_OPTIONS = 'options';
 
+    /**
+     * @var array
+     */
     protected $OPTIONS_LIST = [
         self::OPT_ACLS                => ['option' => 'A'],
         self::OPT_ADDRESS             => ['option' => 'address', 'argument' => true],
@@ -585,6 +600,9 @@ class Rsync extends Command
         self::OPT_XATTRS              => ['option' => 'xattrs'],
     ];
 
+    /**
+     * @var array
+     */
     private $config = [
         self::CONF_EXECUTABLE => 'rsync',
         self::CONF_CWD        => './',
@@ -592,6 +610,13 @@ class Rsync extends Command
         self::CONF_OPTIONS    => [],
     ];
 
+    /**
+     * Rsync constructor.
+     *
+     * @param array|null $config
+     *
+     * @throws \xobotyi\rsync\Exception\Command
+     */
     public function __construct(?array $config = null) {
         $this->config = array_merge($this->config, $config ?: []);
 
@@ -601,6 +626,10 @@ class Rsync extends Command
         parent::__construct($this->config[self::CONF_EXECUTABLE], $this->config[self::CONF_CWD]);
     }
 
+    /**
+     * @return string
+     * @throws \xobotyi\rsync\Exception\Command
+     */
     public function __toString() :string {
         if (isset($this->config[self::CONF_SSH])) {
             $this->setOption(self::OPT_RSH, (string)$this->config[self::CONF_SSH]);
@@ -609,10 +638,20 @@ class Rsync extends Command
         return parent::__toString();
     }
 
+    /**
+     * @return null|\xobotyi\rsync\SSH
+     */
     public function getSSH() :?SSH {
         return $this->config[self::CONF_SSH];
     }
 
+    /**
+     * @param string $optName
+     * @param bool   $val
+     *
+     * @return \xobotyi\rsync\Rsync
+     * @throws \xobotyi\rsync\Exception\Command
+     */
     public function setOption(string $optName, $val = true) :self {
         switch ($optName) {
             case self::OPT_READ_BATCH:
@@ -633,6 +672,12 @@ class Rsync extends Command
         return $this;
     }
 
+    /**
+     * @param $ssh
+     *
+     * @return \xobotyi\rsync\Rsync
+     * @throws \xobotyi\rsync\Exception\Command
+     */
     public function setSSH($ssh) :self {
         if ($ssh instanceof SSH) {
             $this->config[self::CONF_SSH] = $ssh;
@@ -650,6 +695,13 @@ class Rsync extends Command
         return $this;
     }
 
+    /**
+     * @param string $from
+     * @param string $to
+     *
+     * @return \xobotyi\rsync\Rsync
+     * @throws \xobotyi\rsync\Exception\Command
+     */
     public function sync(string $from, string $to) :self {
 
         $this->setParameters([$from, $to]);

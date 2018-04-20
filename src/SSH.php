@@ -140,6 +140,7 @@ class SSH extends Command
      * interaction, because private keys are not transmitted over the encrypted connection like passwords are.
      */
     public const OPT_PASSWORD_FILE = 'password_file';
+
     /**
      * Path to ssh executable
      */
