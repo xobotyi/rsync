@@ -262,36 +262,40 @@ abstract class Command
             return '';
         }
 
-        $shortOptions        = '';
-        $longOptions         = '';
-        $parametrizedOptions = '';
+        $shortOptions = $longOptions = $parametrizedOptions = '';
 
         foreach ($this->options as $opt => $value) {
-            $option = $this->OPTIONS_LIST[$opt]['option'];
+            $option       = $this->OPTIONS_LIST[$opt]['option'];
+            $isLongOption = strlen($option) > 1;
+
             if (!($this->OPTIONS_LIST[$opt]['argument'] ?? false)) {
-                strlen($option) > 1
+                $isLongOption
                     ? $longOptions .= ' --' . $option
                     : $shortOptions .= $option;
 
                 continue;
             }
 
+            $option = ($isLongOption > 1 ? ' --' : ' -') . $option;
+
             if ($this->OPTIONS_LIST[$opt]['repeatable'] ?? false) {
                 foreach ($value as $val) {
-                    $parametrizedOptions .= (strlen($option) > 1 ? ' --' : ' -') . $option . $this->optionValueAssigner . escapeshellarg($val);
+                    $parametrizedOptions .= $option . $this->optionValueAssigner . escapeshellarg($val);
                 }
 
                 continue;
             }
 
-            $parametrizedOptions .= (strlen($option) > 1 ? ' --' : ' -') . $option . $this->optionValueAssigner . escapeshellarg($value);
+            $parametrizedOptions .= $option . $this->optionValueAssigner . escapeshellarg($value);
         }
 
-        $shortOptions        = rtrim($shortOptions);
-        $longOptions         = rtrim($longOptions);
-        $parametrizedOptions = rtrim($parametrizedOptions);
+        $shortOptions        = rtrim($shortOptions) ?: '';
+        $longOptions         = rtrim($longOptions) ?: '';
+        $parametrizedOptions = rtrim($parametrizedOptions) ?: '';
 
-        return ($shortOptions ? ' -' . $shortOptions : '') . ($longOptions ?: '') . ($parametrizedOptions ?: '');
+        return ($shortOptions ? ' -' . $shortOptions : '')
+               . $longOptions
+               . $parametrizedOptions;
     }
 
     /**
