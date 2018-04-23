@@ -79,6 +79,7 @@ $rsync = new Rsync([
                        ],
                    ]);
 $rsync->sync('./relative/path/to/source', 'user@some.remote.lan:/abs/path/to/destination');
+echo './relative/path/to/source ' . ($rsync->getExitCode() === 0 ? 'successfully synchronized with remote.' : 'not synchronised due to errors.') . "\n";
 
 $rsync->setExecutable('ssh')
       ->setOption(SSH::OPT_OPTION, false)// 'false' value turns off the options
@@ -87,4 +88,5 @@ $rsync->setExecutable('ssh')
                        SSH::OPT_PORT                => 22,
                    ]);
 $rsync->sync('/new/path/to/source', 'user@some.remote.lan:/abs/path/to/destination');
+echo '/new/path/to/source ' . ($rsync->getExitCode() === 0 ? 'successfully synchronized with remote.' : 'not synchronised due to errors.') . "\n";
 ```
