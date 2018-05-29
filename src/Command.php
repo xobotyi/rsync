@@ -93,7 +93,7 @@ abstract class Command
                 continue;
             }
 
-            $option = ($isLongOption > 1 ? ' --' : ' -') . $option;
+            $option = ($isLongOption ? ' --' : ' -') . $option;
 
             if ($this->OPTIONS_LIST[$opt]['repeatable'] ?? false) {
                 foreach ($value as $val) {
