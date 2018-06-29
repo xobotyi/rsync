@@ -16,26 +16,13 @@ namespace xobotyi\rsync;
 class SSH extends Command
 {
     /**
-     * Use protocol version 1 only.
+     * Path to ssh executable
      */
-    public const OPT_PROTOCOL_V1 = 'protocol_v1';
+    public const CONF_EXECUTABLE = 'executable';
     /**
-     * Use protocol version 2 only.
+     * Array of options that has to be set
      */
-    public const OPT_PROTOCOL_V2 = 'protocol_v2';
-    /**
-     * Forces connections using IPv4 addresses only.
-     */
-    public const OPT_IPV4 = 'ipv4';
-    /**
-     * Forces connections using IPv6 addresses only.
-     */
-    public const OPT_IPV6 = 'ipv6';
-    /**
-     * Disables authentication agent forwarding. Authentication agent forwarding is enabled using the ForwardAgent
-     * keyword, which is set to 'yes' by default.
-     */
-    public const OPT_DISABLE_AUTH = 'disable_auth';
+    public const CONF_OPTIONS = 'options';
     /**
      * Specifies one or more (comma-separated) encryption algorithms supported by the client.
      *
@@ -60,6 +47,12 @@ class SSH extends Command
      */
     public const OPT_COMPRESSION = 'compression';
     /**
+     * Specifies an additional configuration file. Settings are read from this file in addition to the default
+     * user-specific file (~/.ssh2/ssh2_config and/or the system-wide file (/etc/ssh2/ssh2_config).Settings in this
+     * file override settings in both the user-specific file and the system-wide file.
+     */
+    public const OPT_CONFIG_FILE = 'config_file';
+    /**
      * Sets the debug level. Increasing the value increases the amount of information displayed. Use 1, 2, 3, or 99.
      * (Values 4-98 are accepted, but are equivalent to 3.)
      *
@@ -69,16 +62,19 @@ class SSH extends Command
      */
     public const OPT_DEBUG_LEVEL = 'debug_level';
     /**
+     * Disables authentication agent forwarding. Authentication agent forwarding is enabled using the ForwardAgent
+     * keyword, which is set to 'yes' by default.
+     */
+    public const OPT_DISABLE_AUTH = 'disable_auth';
+    /**
      * Sets the escape character for the terminal session. The default character is a tilde (~). Setting the escape
      * character to 'none' means that no escape character is available and the tilde acts like any other character.
      */
     public const OPT_ESCAPE_CHARACTER = 'escape_character';
     /**
-     * Specifies an additional configuration file. Settings are read from this file in addition to the default
-     * user-specific file (~/.ssh2/ssh2_config and/or the system-wide file (/etc/ssh2/ssh2_config).Settings in this
-     * file override settings in both the user-specific file and the system-wide file.
+     * Forces a tty allocation even if a command is specified.
      */
-    public const OPT_CONFIG_FILE = 'config_file';
+    public const OPT_FORCE_TTY = 'force_tty';
     /**
      * Specifies an alternate identification file to use for public key authentication. The file location is assumed to
      * be in the current working directory unless you specify a fully-qualified or relative path. The default identity
@@ -86,10 +82,13 @@ class SSH extends Command
      */
     public const OPT_IDENTIFICATION_FILE = 'identification_file';
     /**
-     * Specifies a name to use for login on the remote computer. (Note: If you include the optional [user@] as part of
-     * your host specification, * -l overrides the specified user name.)
+     * Forces connections using IPv4 addresses only.
      */
-    public const OPT_USERNAME = 'username';
+    public const OPT_IPV4 = 'ipv4';
+    /**
+     * Forces connections using IPv6 addresses only.
+     */
+    public const OPT_IPV6 = 'ipv6';
     /**
      * Specifies, in order of preference, which MACs (message authentication codes) are supported by the client.
      * Allowed values are 'hmac-sha256', 'hmac-sha1', 'hmac-sha1-96', 'hmac-md5', 'hmac-md5-96', 'hmac-sha512', and
@@ -102,31 +101,16 @@ class SSH extends Command
      */
     public const OPT_MAC_ALGORITHM = 'mac_algorithm';
     /**
-     * Sets any option that can be configured using a configuration file keyword. For a list of keywords and their
-     * meanings, see ssh2_config(5). Syntax alternatives are shown below. Use quotation marks to contain expressions
-     * that include spaces.
-     */
-    public const OPT_OPTION = 'option';
-    /**
-     * Specifies the port to connect to on the server. The default is 22, which is the standard port for Secure Shell
-     * connections.
-     */
-    public const OPT_PORT = 'port';
-    /**
-     * Invokes the specified subsystem on the remote system. Subsystems are a feature of the Secure Shell protocol
-     * which facilitates the use of Secure Shell as a secure transport for other applications (such as sftp).
-     * Subsystems must be defined by the Secure Shell server.
-     */
-    public const OPT_SUBSYSTEM = 'subsystem';
-    /**
      * Connects without requesting a session channel on the server. This can be used with port-forwarding requests if a
      * session channel (and tty) is not needed, or the server does not give one
      */
     public const OPT_NO_SESSION = 'no_session';
     /**
-     * Forces a tty allocation even if a command is specified.
+     * Sets any option that can be configured using a configuration file keyword. For a list of keywords and their
+     * meanings, see ssh2_config(5). Syntax alternatives are shown below. Use quotation marks to contain expressions
+     * that include spaces.
      */
-    public const OPT_FORCE_TTY = 'force_tty';
+    public const OPT_OPTION = 'option';
     /**
      * Specifies a file containing the password to use for the connection. Set permissions on the password file to 600;
      * the file is not accepted if it has read or write permissions for group or other. Also, for a non-root user, the
@@ -140,15 +124,30 @@ class SSH extends Command
      * interaction, because private keys are not transmitted over the encrypted connection like passwords are.
      */
     public const OPT_PASSWORD_FILE = 'password_file';
-
     /**
-     * Path to ssh executable
+     * Specifies the port to connect to on the server. The default is 22, which is the standard port for Secure Shell
+     * connections.
      */
-    public const CONF_EXECUTABLE = 'executable';
+    public const OPT_PORT = 'port';
     /**
-     * Array of options that has to be set
+     * Use protocol version 1 only.
      */
-    public const CONF_OPTIONS = 'options';
+    public const OPT_PROTOCOL_V1 = 'protocol_v1';
+    /**
+     * Use protocol version 2 only.
+     */
+    public const OPT_PROTOCOL_V2 = 'protocol_v2';
+    /**
+     * Invokes the specified subsystem on the remote system. Subsystems are a feature of the Secure Shell protocol
+     * which facilitates the use of Secure Shell as a secure transport for other applications (such as sftp).
+     * Subsystems must be defined by the Secure Shell server.
+     */
+    public const OPT_SUBSYSTEM = 'subsystem';
+    /**
+     * Specifies a name to use for login on the remote computer. (Note: If you include the optional [user@] as part of
+     * your host specification, * -l overrides the specified user name.)
+     */
+    public const OPT_USERNAME = 'username';
     /**
      * @var array
      */
@@ -199,8 +198,11 @@ class SSH extends Command
     }
 
     /**
-     * @param string $optName
-     * @param mixed  $val
+     * Set the command's option.
+     *
+     * @param string $optName option name (see the constants list for options names and its descriptions)
+     * @param mixed  $val     option value, by default is true, if has false value - option wil be removed from result
+     *                        command.
      *
      * @return \xobotyi\rsync\SSH
      * @throws Exception\Command

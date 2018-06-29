@@ -62,6 +62,72 @@ abstract class Command
     }
 
     /**
+     * Check if given variable can be casted to the string
+     *
+     * @param $var
+     *
+     * @return bool
+     */
+    private static function isStringable(&$var) :bool {
+        return (\is_string($var) || \is_numeric($var) || (\is_object($var) && \method_exists($var, '__toString')));
+    }
+
+    /**
+     *
+     *
+     * @param array  $arrayToStore
+     * @param string $option
+     * @param        $value
+     *
+     * @throws \xobotyi\rsync\Exception\Command
+     */
+    private static function StoreOption(array &$arrayToStore, string $option, $value) :void {
+        if ($value === true) {
+        }
+        else if ($value === false) {
+            unset($arrayToStore[$option]);
+
+            return;
+        }
+        else if (is_array($value)) {
+            foreach ($value as &$val) {
+                if (!self::isStringable($val)) {
+                    throw new Exception\Command("Option {$option} has non-stringable element");
+                }
+            }
+        }
+        else if (!self::isStringable($value)) {
+            throw new Exception\Command("Option {$option} got non-stringable value");
+        }
+
+        $arrayToStore[$option] = $value;
+    }
+
+    /**
+     * Check if given path is an executable file
+     *
+     * @param string $exec path to executable
+     *
+     * @return bool
+     */
+    public static function isExecutable(string $exec) :bool {
+        if (substr(strtolower(php_uname('s')), 0, 3) === 'win') {
+            if (strpos($exec, '/') !== false || strpos($exec, '\\') !== false) {
+                $exec = dirname($exec);
+                $exec = ($exec ? $exec . ':' : '') . basename($exec);
+            }
+
+            exec('where' . ' /Q ' . escapeshellcmd($exec), $output, $code);
+
+            return $code === 0;
+        }
+
+        return (bool)shell_exec('which' . ' ' . escapeshellcmd($exec));
+    }
+
+    /**
+     * Build the command
+     *
      * @return string
      */
     public function __toString() :string {
@@ -72,6 +138,8 @@ abstract class Command
     }
 
     /**
+     * Build the options string
+     *
      * @return string
      */
     public function getOptionsString() :string {
@@ -93,7 +161,7 @@ abstract class Command
                 continue;
             }
 
-            $option = ($isLongOption > 1 ? ' --' : ' -') . $option;
+            $option = ($isLongOption ? ' --' : ' -') . $option;
 
             if ($this->OPTIONS_LIST[$opt]['repeatable'] ?? false) {
                 foreach ($value as $val) {
@@ -116,6 +184,8 @@ abstract class Command
     }
 
     /**
+     * Build the parameters string
+     *
      * @return string
      */
     public function getParametersString() :string {
@@ -133,6 +203,8 @@ abstract class Command
     }
 
     /**
+     * Add single parameter to the string. New parameter will be appended to the end.
+     *
      * @param $parameter
      *
      * @return $this
@@ -142,21 +214,15 @@ abstract class Command
         if (!self::isStringable($parameter)) {
             throw new Exception\Command("Got non-stringable parameter");
         }
+
         $this->parameters[] = $parameter;
 
         return $this;
     }
 
     /**
-     * @param $var
+     * Empty the parameters.
      *
-     * @return bool
-     */
-    private static function isStringable(&$var) :bool {
-        return (\is_string($var) || \is_numeric($var) || (\is_object($var) && \method_exists($var, '__toString')));
-    }
-
-    /**
      * @return \xobotyi\rsync\Command
      */
     public function clearParameters() :self {
@@ -166,6 +232,8 @@ abstract class Command
     }
 
     /**
+     * Execute the command by opening the child process.
+     *
      * @return \xobotyi\rsync\Command
      * @throws \xobotyi\rsync\Exception\Command
      */
@@ -199,6 +267,8 @@ abstract class Command
     }
 
     /**
+     * Return the current working directory.
+     *
      * @return string
      */
     public function getCWD() :string {
@@ -206,7 +276,9 @@ abstract class Command
     }
 
     /**
-     * @param string $cwd
+     * Set the current working directory. Will be used during the command execution.
+     *
+     * @param string $cwd CWD path
      *
      * @return \xobotyi\rsync\Command
      */
@@ -217,6 +289,8 @@ abstract class Command
     }
 
     /**
+     * Get the executable path
+     *
      * @return string
      */
     public function getExecutable() :string {
@@ -224,6 +298,8 @@ abstract class Command
     }
 
     /**
+     * Set the executable path
+     *
      * @param string $executable
      *
      * @return $this
@@ -244,6 +320,8 @@ abstract class Command
     }
 
     /**
+     * Return the last command execution exitCode, null if command hasn't been executed yet
+     *
      * @return string|null
      */
     public function getExitCode() :?string {
@@ -251,6 +329,8 @@ abstract class Command
     }
 
     /**
+     * Get the options array
+     *
      * @return array
      */
     public function getOptions() :array {
@@ -258,7 +338,9 @@ abstract class Command
     }
 
     /**
-     * @param array $options
+     * Set the bunch of option
+     *
+     * @param array $options an array of options, where array keys are options names and array values are options values
      *
      * @return $this
      * @throws \xobotyi\rsync\Exception\Command
@@ -272,8 +354,11 @@ abstract class Command
     }
 
     /**
-     * @param string $optName
-     * @param mixed  $val
+     * Set the command's option.
+     *
+     * @param string $optName option name (see the constants list for options names and its descriptions)
+     * @param mixed  $val     option value, by default is true, if has false value - option wil be removed from result
+     *                        command.
      *
      * @return $this
      * @throws \xobotyi\rsync\Exception\Command
@@ -297,35 +382,8 @@ abstract class Command
     }
 
     /**
-     * @param array  $arrayToStore
-     * @param string $option
-     * @param        $value
+     * Return the parameters of command
      *
-     * @throws \xobotyi\rsync\Exception\Command
-     */
-    private static function StoreOption(array &$arrayToStore, string $option, $value) :void {
-        if ($value === true) {
-        }
-        else if ($value === false) {
-            unset($arrayToStore[$option]);
-
-            return;
-        }
-        else if (is_array($value)) {
-            foreach ($value as &$val) {
-                if (!self::isStringable($val)) {
-                    throw new Exception\Command("Option {$option} has non-stringable element");
-                }
-            }
-        }
-        else if (!self::isStringable($value)) {
-            throw new Exception\Command("Option {$option} got non-stringable value");
-        }
-
-        $arrayToStore[$option] = $value;
-    }
-
-    /**
      * @return array
      */
     public function getParameters() :array {
@@ -333,7 +391,10 @@ abstract class Command
     }
 
     /**
-     * @param array $parameters
+     * Set the bunch of command parameters
+     *
+     * @param array $parameters array of strings to set as command parameters, each string will be appended to the end
+     *                          of command
      *
      * @return $this
      * @throws \xobotyi\rsync\Exception\Command
@@ -354,6 +415,8 @@ abstract class Command
     }
 
     /**
+     * Return the last command execution stderr, null if command hasn't been executed yet
+     *
      * @return string|null
      */
     public function getStderr() :?string {
@@ -362,29 +425,11 @@ abstract class Command
     }
 
     /**
+     * Return the last command execution stdout, null if command hasn't been executed yet
+     *
      * @return string|null
      */
     public function getStdout() :?string {
         return $this->stdout;
-    }
-
-    /**
-     * @param string $exec
-     *
-     * @return bool
-     */
-    public static function isExecutable(string $exec) :bool {
-        if (substr(strtolower(php_uname('s')), 0, 3) === 'win') {
-            if (strpos($exec, '/') !== false || strpos($exec, '\\') !== false) {
-                $exec = dirname($exec);
-                $exec = ($exec ? $exec . ':' : '') . basename($exec);
-            }
-
-            exec('where' . ' /Q ' . escapeshellcmd($exec), $output, $code);
-
-            return $code === 0;
-        }
-
-        return (bool)shell_exec('which' . ' ' . escapeshellcmd($exec));
     }
 }

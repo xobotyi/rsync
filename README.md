@@ -53,6 +53,9 @@ Install with composer
 composer require xobotyi/rsync
 ```
 
+## Docs
+The code is well documented, for methods and parameters descriptions see the sources.
+
 ## Usage
 _Simplest:_
 ```php
@@ -90,3 +93,4 @@ $rsync->setExecutable('ssh')
 $rsync->sync('/new/path/to/source', 'user@some.remote.lan:/abs/path/to/destination');
 echo '/new/path/to/source ' . ($rsync->getExitCode() === 0 ? 'successfully synchronized with remote.' : 'not synchronised due to errors.') . "\n";
 ```
+

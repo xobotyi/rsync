@@ -12,6 +12,22 @@ class Rsync extends Command
 {
 
     /**
+     * Path to CWD of rsync execution
+     */
+    public const CONF_CWD = 'cwd';
+    /**
+     * Path to rsync executable
+     */
+    public const CONF_EXECUTABLE = 'executable';
+    /**
+     * Array of options for rsync
+     */
+    public const CONF_OPTIONS = 'options';
+    /**
+     * Array of configs for SSH instance or SSH instance itself
+     */
+    public const CONF_SSH = 'ssh';
+    /**
      * preserve ACLs (implies --perms)
      */
     public const OPT_ACLS = 'acls';
@@ -368,10 +384,6 @@ class Rsync extends Command
      */
     public const OPT_READ_BATCH = 'read-batch';
     /**
-     * send OPTION to the remote side only
-     */
-    public const OPT_REMOTE_OPTION = 'remote-option';
-    /**
      * recurse into directories
      */
     public const OPT_RECURSIVE = 'recursive';
@@ -379,6 +391,10 @@ class Rsync extends Command
      * use relative path names
      */
     public const OPT_RELATIVE = 'relative';
+    /**
+     * send OPTION to the remote side only
+     */
+    public const OPT_REMOTE_OPTION = 'remote-option';
     /**
      * sender removes synchronized files (non-dirs)
      */
@@ -463,24 +479,6 @@ class Rsync extends Command
      * preserve extended attributes
      */
     public const OPT_XATTRS = 'xattrs';
-
-    /**
-     * Path to rsync executable
-     */
-    public const CONF_EXECUTABLE = 'executable';
-    /**
-     * Path to CWD of rsync execution
-     */
-    public const CONF_CWD = 'cwd';
-    /**
-     * Array of configs for SSH instance or SSH instance itself
-     */
-    public const CONF_SSH = 'ssh';
-    /**
-     * Array of options for rsync
-     */
-    public const CONF_OPTIONS = 'options';
-
     /**
      * @var array
      */
@@ -627,7 +625,10 @@ class Rsync extends Command
     }
 
     /**
-     * @param $ssh
+     * Set the SSH configuration.
+     *
+     * @param mixed $ssh can be an \xobotyi\rsync\SSH instance or array of configs for new \xobotyi\rsync\SSH instance
+     *                   or null to unset the ssh options from rsync command
      *
      * @return \xobotyi\rsync\Rsync
      * @throws \xobotyi\rsync\Exception\Command
@@ -650,20 +651,28 @@ class Rsync extends Command
     }
 
     /**
+     * Build the command
+     *
      * @return string
      * @throws \xobotyi\rsync\Exception\Command
      */
     public function __toString() :string {
-        if (isset($this->config[self::CONF_SSH])) {
+        if ($this->config[self::CONF_SSH] ?? false) {
             $this->setOption(self::OPT_RSH, (string)$this->config[self::CONF_SSH]);
+        }
+        else {
+            $this->setOption(self::OPT_RSH, false);
         }
 
         return parent::__toString();
     }
 
     /**
-     * @param string $optName
-     * @param mixed  $val
+     * Set the command's option.
+     *
+     * @param string $optName option name (see the constants list for options names and its descriptions)
+     * @param mixed  $val     option value, by default is true, if has false value - option wil be removed from result
+     *                        command.
      *
      * @return \xobotyi\rsync\Rsync
      * @throws \xobotyi\rsync\Exception\Command
@@ -689,6 +698,8 @@ class Rsync extends Command
     }
 
     /**
+     * Return SSH instance if it was set for current configuration
+     *
      * @return null|\xobotyi\rsync\SSH
      */
     public function getSSH() :?SSH {
@@ -696,8 +707,10 @@ class Rsync extends Command
     }
 
     /**
-     * @param string $from
-     * @param string $to
+     * Synchronise files from $from path to $to path.
+     *
+     * @param string $from path where from take files
+     * @param string $to   path where to deploy them
      *
      * @return \xobotyi\rsync\Rsync
      * @throws \xobotyi\rsync\Exception\Command
