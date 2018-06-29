@@ -38,7 +38,7 @@ Library supports whole bunch of options and parameters implemented in rsync clie
 3) I'm eating my own sweet pie=)
 4) Supports whole bunch of parameters and options of rsync and ssh
 5) Easy to use
-6) Works on Windows (ofcourse id you installed ssh and rsync clients for Windows)
+6) Works on Windows (of course if you installed ssh and rsync clients for Windows)
 
 
 ## Requirements
