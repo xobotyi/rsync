@@ -522,7 +522,7 @@ class Rsync extends Command
         self::OPT_EXISTING            => ['option' => 'existing'],
         self::OPT_FAKE_SUPER          => ['option' => 'fake-super'],
         self::OPT_FILES_FROM          => ['option' => 'files-from', 'argument' => true],
-        self::OPT_FILTER              => ['option' => 'f', 'argument' => true],
+        self::OPT_FILTER              => ['option' => 'f', 'argument' => true, 'repeatable' => true],
         self::OPT_FORCE               => ['option' => 'force'],
         self::OPT_FROM0               => ['option' => '0'],
         self::OPT_FUZZY               => ['option' => 'y'],
